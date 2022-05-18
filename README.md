@@ -10,7 +10,7 @@ This repository consists of two main MLOps workflows in the context of image cla
       B--Pass-->C[Image Build&Push];
       C-->D[Trigger TFX Pipeline];
       
-      E[Data Collection]-->F[Batch Inference];
+      E[Data Collection]--Enough Data-->F[Batch Inference];
       F-->G[Performance Evaluation];
       G--Under Threshold-->D;
 ```
