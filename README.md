@@ -19,7 +19,7 @@ This repository consists of two main MLOps workflows in the context of image cla
       end
       
       subgraph pipeline
-      direction LR
+      direction TD
       D[Pipeline Trigger]
       -->H[Data Injection];
       H-->I[Data Validation];
