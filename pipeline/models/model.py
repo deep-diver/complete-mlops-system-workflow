@@ -26,7 +26,7 @@ _IMAGE_KEY = 'image'
 _LABEL_KEY = 'label'
 
 def _get_serve_image_fn(model):
-  """Returns a function that feeds the input tensor into the model."""
+
   @tf.function
   def serve_image_fn(image_tensor):
     return model(image_tensor)
@@ -35,12 +35,6 @@ def _get_serve_image_fn(model):
 
 
 def _image_augmentation(image_features):
-  """Perform image augmentation on batches of images .
-  Args:
-    image_features: a batch of image features
-  Returns:
-    The augmented image features
-  """
   batch_size = tf.shape(image_features)[0]
   image_features = tf.image.random_flip_left_right(image_features)
   image_features = tf.image.resize_with_crop_or_pad(image_features, 250, 250)
@@ -50,12 +44,6 @@ def _image_augmentation(image_features):
 
 
 def _data_augmentation(feature_dict):
-  """Perform data augmentation on batches of data.
-  Args:
-    feature_dict: a dict containing features of samples
-  Returns:
-    The feature dict with augmented features
-  """
   image_features = feature_dict[features.transformed_name(_IMAGE_KEY)]
   image_features = _image_augmentation(image_features)
   feature_dict[features.transformed_name(_IMAGE_KEY)] = image_features
@@ -66,22 +54,12 @@ def _input_fn(file_pattern: List[str],
               tf_transform_output: tft.TFTransformOutput,
               is_train: bool = False,
               batch_size: int = 200) -> tf.data.Dataset:
-  """Generates features and label for tuning/training.
-  Args:
-    file_pattern: List of paths or patterns of input tfrecord files.
-    data_accessor: DataAccessor for converting input to RecordBatch.
-    tf_transform_output: A TFTransformOutput.
-    is_train: Whether the input dataset is train split or not.
-    batch_size: representing the number of consecutive elements of returned
-      dataset to combine in a single batch
-  Returns:
-    A dataset that contains (features, indices) tuple where features is a
-      dictionary of Tensors, and indices is a single Tensor of label indices.
-  """
   dataset = data_accessor.tf_dataset_factory(
       file_pattern,
       dataset_options.TensorFlowDatasetOptions(
-          batch_size=batch_size, label_key=features.transformed_name(_LABEL_KEY)),
+          batch_size=batch_size, 
+          label_key=features.transformed_name(_LABEL_KEY)
+      ),
       tf_transform_output.transformed_metadata.schema)
 
   if is_train:
@@ -90,13 +68,6 @@ def _input_fn(file_pattern: List[str],
   return dataset
 
 def _freeze_model_by_percentage(model: tf.keras.Model, percentage: float):
-  """Freeze part of the model based on specified percentage.
-  Args:
-    model: The keras model need to be partially frozen
-    percentage: the percentage of layers to freeze
-  Raises:
-    ValueError: Invalid values.
-  """
   if percentage < 0 or percentage > 1:
     raise ValueError('Freeze percentage should between 0.0 and 1.0')
 
@@ -106,6 +77,7 @@ def _freeze_model_by_percentage(model: tf.keras.Model, percentage: float):
 
   num_layers = len(model.layers)
   num_layers_to_freeze = int(num_layers * percentage)
+
   for idx, layer in enumerate(model.layers):
     if idx < num_layers_to_freeze:
       layer.trainable = False
@@ -120,8 +92,6 @@ def _build_keras_model() -> tf.keras.Model:
       pooling='max')
   base_model.input_spec = None
 
-  # We add a Dropout layer at the top of MobileNet backbone we just created to
-  # prevent overfiting, and then a Dense layer to classifying CIFAR10 objects
   model = tf.keras.Sequential([
       tf.keras.layers.InputLayer(
           input_shape=(224, 224, 3), name=features.transformed_name(_IMAGE_KEY)),
@@ -130,18 +100,36 @@ def _build_keras_model() -> tf.keras.Model:
       tf.keras.layers.Dense(10, activation='softmax')
   ])
 
-  # Freeze the whole MobileNet backbone to first train the top classifer only
-  _freeze_model_by_percentage(base_model, 1.0)
+  # _freeze_model_by_percentage(base_model, 1.0)
 
-  model.compile(
-      loss='sparse_categorical_crossentropy',
-      optimizer=tf.keras.optimizers.RMSprop(lr=_CLASSIFIER_LEARNING_RATE),
-      metrics=['sparse_categorical_accuracy'])
-  model.summary(print_fn=absl.logging.info)
+  # model.compile(
+  #     loss='sparse_categorical_crossentropy',
+  #     optimizer=tf.keras.optimizers.RMSprop(lr=_CLASSIFIER_LEARNING_RATE),
+  #     metrics=['sparse_categorical_accuracy'])
+  # model.summary(print_fn=absl.logging.info)
 
   return model, base_model
 
+def _compile(model_to_fit: tf.keras.Model, 
+             model_to_freeze: tf.keras.Model, 
+             freeze_percentage: float,
+             learning_rate: float):
+  _freeze_model_by_percentage(model_to_freeze, freeze_percentage)
+
+  model_to_fit.compile(
+      loss='sparse_categorical_crossentropy',
+      optimizer=tf.keras.optimizers.RMSprop(lr=learning_rate),
+      metrics=['sparse_categorical_accuracy'])
+  model_to_fit.summary(print_fn=absl.logging.info)  
+
+  return model_to_fit, model_to_freeze
+
 def run_fn(fn_args: FnArgs):
+  steps_per_epoch = int(_TRAIN_DATA_SIZE / _TRAIN_BATCH_SIZE)
+  total_epochs = int(fn_args.train_steps / steps_per_epoch)
+  if _CLASSIFIER_EPOCHS > total_epochs:
+    raise ValueError('Classifier epochs is greater than the total epochs')
+
   tf_transform_output = tft.TFTransformOutput(fn_args.transform_output)
 
   train_dataset = _input_fn(
@@ -158,20 +146,13 @@ def run_fn(fn_args: FnArgs):
       is_train=False,
       batch_size=_EVAL_BATCH_SIZE)
 
-  model, base_model = _build_keras_model()
-
   absl.logging.info('Tensorboard logging to {}'.format(fn_args.model_run_dir))
-  # Write logs to path
   tensorboard_callback = tf.keras.callbacks.TensorBoard(
       log_dir=fn_args.model_run_dir, update_freq='batch')
 
-  # Our training regime has two phases: we first freeze the backbone and train
-  # the newly added classifier only, then unfreeze part of the backbone and
-  # fine-tune with classifier jointly.
-  steps_per_epoch = int(_TRAIN_DATA_SIZE / _TRAIN_BATCH_SIZE)
-  total_epochs = int(fn_args.train_steps / steps_per_epoch)
-  if _CLASSIFIER_EPOCHS > total_epochs:
-    raise ValueError('Classifier epochs is greater than the total epochs')
+  model, base_model = _build_keras_model()
+  model, base_model = _compile(model, base_model, 1.0, 
+                               _CLASSIFIER_LEARNING_RATE)
 
   absl.logging.info('Start training the top classifier')
   model.fit(
@@ -183,14 +164,8 @@ def run_fn(fn_args: FnArgs):
       callbacks=[tensorboard_callback])
 
   absl.logging.info('Start fine-tuning the model')
-  _freeze_model_by_percentage(base_model, 0.9)
-
-  # We need to recompile the model because layer properties have changed
-  model.compile(
-      loss='sparse_categorical_crossentropy',
-      optimizer=tf.keras.optimizers.RMSprop(lr=_FINETUNE_LEARNING_RATE),
-      metrics=['sparse_categorical_accuracy'])
-  model.summary(print_fn=absl.logging.info)
+  model, base_model = _compile(model, base_model, 0.9, 
+                               _FINETUNE_LEARNING_RATE)
 
   model.fit(
       train_dataset,
