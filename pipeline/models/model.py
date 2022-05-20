@@ -2,6 +2,7 @@ import os
 from typing import List
 import absl
 import tensorflow as tf
+from tf.keras.optimizers import Adam
 import tensorflow_transform as tft
 
 from tfx.components.trainer.fn_args_utils import DataAccessor
@@ -41,7 +42,6 @@ def _get_signature(model):
   return signatures  
 
 def _get_serve_image_fn(model):
-
   @tf.function
   def serve_image_fn(image_tensor):
     return model(image_tensor)
@@ -125,7 +125,7 @@ def _compile(model_to_fit: tf.keras.Model,
 
   model_to_fit.compile(
       loss='sparse_categorical_crossentropy',
-      optimizer=tf.keras.optimizers.RMSprop(lr=learning_rate),
+      optimizer=Adam(lr=learning_rate),
       metrics=['sparse_categorical_accuracy'])
   model_to_fit.summary(print_fn=INFO)  
 
