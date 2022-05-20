@@ -44,17 +44,10 @@ SERVING_MODEL_DIR = os.path.join(PIPELINE_ROOT, 'serving_model')
 # dependency currently, so this means CsvExampleGen cannot be used with Dataflow
 # (step 8 in the template notebook).
 
-DATA_PATH = 'gs://{}/tfx-template/data/penguin/'.format(configs.GCS_BUCKET_NAME)
+DATA_PATH = 'gs://{}/img_classification/data/penguin/'.format(configs.GCS_BUCKET_NAME)
 
 
 def run():
-  """Define a kubeflow pipeline."""
-
-  # Metadata config. The defaults works work with the installation of
-  # KF Pipelines using Kubeflow. If installing KF Pipelines using the
-  # lightweight deployment option, you may need to override the defaults.
-  # If you use Kubeflow, metadata will be written to MySQL database inside
-  # Kubeflow cluster.
   metadata_config = tfx.orchestration.experimental.get_default_kubeflow_metadata_config(
   )
 
@@ -72,8 +65,6 @@ def run():
           pipeline_name=configs.PIPELINE_NAME,
           pipeline_root=PIPELINE_ROOT,
           data_path=DATA_PATH,
-          # NOTE: Use `query` instead of `data_path` to use BigQueryExampleGen.
-          # query=configs.BIG_QUERY_QUERY,
           # NOTE: Set the path of the customized schema if any.
           # schema_path=generated_schema_path,
           preprocessing_fn=configs.PREPROCESSING_FN,
@@ -82,9 +73,6 @@ def run():
           eval_args=tfx.proto.EvalArgs(num_steps=configs.EVAL_NUM_STEPS),
           eval_accuracy_threshold=configs.EVAL_ACCURACY_THRESHOLD,
           serving_model_dir=SERVING_MODEL_DIR,
-          # NOTE: Provide GCP configs to use BigQuery with Beam DirectRunner.
-          # beam_pipeline_args=configs.
-          # BIG_QUERY_WITH_DIRECT_RUNNER_BEAM_PIPELINE_ARGS,
       ))
 
 
