@@ -23,6 +23,7 @@ from tfx import v1 as tfx
 from models import features
 
 from ml_metadata.proto import metadata_store_pb2
+from tfx.proto import example_gen_pb2
 
 
 def create_pipeline(
@@ -46,7 +47,12 @@ def create_pipeline(
 
   # Brings data into the pipeline or otherwise joins/converts training data.
   # TODO(step 2): Might use another ExampleGen class for your data.
-  example_gen = tfx.components.CsvExampleGen(input_base=data_path)
+#   example_gen = tfx.components.CsvExampleGen(input_base=data_path)
+  input_config = example_gen_pb2.Input(splits=[
+      example_gen_pb2.Input.Split(name='train', pattern='train/*'),
+      example_gen_pb2.Input.Split(name='eval', pattern='test/*')
+  ])
+  example_gen = tfx.components.ImportExampleGen(input_base=data_path, input_config=input_config)
   components.append(example_gen)
 
   # Computes statistics over data for visualization and example validation.
@@ -68,7 +74,7 @@ def create_pipeline(
     example_validator = tfx.components.ExampleValidator(  # pylint: disable=unused-variable
         statistics=statistics_gen.outputs['statistics'],
         schema=schema_gen.outputs['schema'])
-    components.append(example_validator)
+    # components.append(example_validator)
 
   # Performs transformations and feature engineering in training and serving.
   transform = tfx.components.Transform(  # pylint: disable=unused-variable
@@ -76,20 +82,20 @@ def create_pipeline(
       schema=schema_gen.outputs['schema'],
       preprocessing_fn=preprocessing_fn)
   # TODO(step 3): Uncomment here to add Transform to the pipeline.
-  # components.append(transform)
+  components.append(transform)
 
   # Uses user-provided Python function that implements a model using Tensorflow.
   trainer = tfx.components.Trainer(
       run_fn=run_fn,
-      examples=example_gen.outputs['examples'],
+    #   examples=example_gen.outputs['examples'],
       # Use outputs of Transform as training inputs if Transform is used.
-      # examples=transform.outputs['transformed_examples'],
-      # transform_graph=transform.outputs['transform_graph'],
+      examples=transform.outputs['transformed_examples'],
+      transform_graph=transform.outputs['transform_graph'],
       schema=schema_gen.outputs['schema'],
       train_args=train_args,
       eval_args=eval_args)
   # TODO(step 4): Uncomment here to add Trainer to the pipeline.
-  # components.append(trainer)
+  components.append(trainer)
 
   # Get the latest blessed model for model validation.
   model_resolver = tfx.dsl.Resolver(

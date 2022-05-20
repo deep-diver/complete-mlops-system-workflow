@@ -17,217 +17,315 @@ A DNN keras model which uses features defined in features.py and network
 parameters defined in constants.py.
 """
 
+import os
 from typing import List
-from absl import logging
+import absl
 import tensorflow as tf
-from tensorflow import keras
 import tensorflow_transform as tft
-from tensorflow_transform.tf_metadata import schema_utils
 
-from tfx import v1 as tfx
-from models import constants
+from tfx.components.trainer.fn_args_utils import DataAccessor
+from tfx.components.trainer.fn_args_utils import FnArgs
+from tfx.components.trainer.rewriting import converters
+from tfx.components.trainer.rewriting import rewriter
+from tfx.components.trainer.rewriting import rewriter_factory
+from tfx.dsl.io import fileio
+from tfx_bsl.tfxio import dataset_options
+
+import flatbuffers
+from tflite_support import metadata_schema_py_generated as _metadata_fb
+from tflite_support import metadata as _metadata
+
 from models import features
-from tfx_bsl.public import tfxio
 
-from tensorflow_metadata.proto.v0 import schema_pb2
+_TRAIN_DATA_SIZE = 128
+_EVAL_DATA_SIZE = 128
+_TRAIN_BATCH_SIZE = 32
+_EVAL_BATCH_SIZE = 32
+_CLASSIFIER_LEARNING_RATE = 1e-3
+_FINETUNE_LEARNING_RATE = 7e-6
+_CLASSIFIER_EPOCHS = 30
 
+_IMAGE_KEY = 'image'
+_LABEL_KEY = 'label'
 
-def _get_tf_examples_serving_signature(model, schema, tf_transform_output):
-  """Returns a serving signature that accepts `tensorflow.Example`."""
+_TFLITE_MODEL_NAME = 'tflite'
 
-  if tf_transform_output is None:  # Transform component is not used.
+def _get_serve_image_fn(model):
+  """Returns a function that feeds the input tensor into the model."""
 
-    @tf.function(input_signature=[
-        tf.TensorSpec(shape=[None], dtype=tf.string, name='examples')
-    ])
-    def serve_tf_examples_fn(serialized_tf_example):
-      """Returns the output to be used in the serving signature."""
-      raw_feature_spec = schema_utils.schema_as_feature_spec(
-          schema).feature_spec
-      # Remove label feature since these will not be present at serving time.
-      raw_feature_spec.pop(features.LABEL_KEY)
-      raw_features = tf.io.parse_example(serialized_tf_example,
-                                         raw_feature_spec)
-      logging.info('serve_features = %s', raw_features)
+  @tf.function
+  def serve_image_fn(image_tensor):
+    """Returns the output to be used in the serving signature.
+    Args:
+      image_tensor: A tensor represeting input image. The image should have 3
+        channels.
+    Returns:
+      The model's predicton on input image tensor
+    """
+    return model(image_tensor)
 
-      outputs = model(raw_features)
-      # TODO(b/154085620): Convert the predicted labels from the model using a
-      # reverse-lookup (opposite of transform.py).
-      return {'outputs': outputs}
-
-  else:  # Transform component exists.
-    # We need to track the layers in the model in order to save it.
-    # TODO(b/162357359): Revise once the bug is resolved.
-    model.tft_layer_inference = tf_transform_output.transform_features_layer()
-
-    @tf.function(input_signature=[
-        tf.TensorSpec(shape=[None], dtype=tf.string, name='examples')
-    ])
-    def serve_tf_examples_fn(serialized_tf_example):
-      """Returns the output to be used in the serving signature."""
-      raw_feature_spec = tf_transform_output.raw_feature_spec()
-      # Remove label feature since these will not be present at serving time.
-      raw_feature_spec.pop(features.LABEL_KEY)
-      raw_features = tf.io.parse_example(serialized_tf_example,
-                                         raw_feature_spec)
-      transformed_features = model.tft_layer_inference(raw_features)
-      logging.info('serve_transformed_features = %s', transformed_features)
-
-      outputs = model(transformed_features)
-      # TODO(b/154085620): Convert the predicted labels from the model using a
-      # reverse-lookup (opposite of transform.py).
-      return {'outputs': outputs}
-
-  return serve_tf_examples_fn
+  return serve_image_fn
 
 
-def _get_transform_features_signature(model, schema, tf_transform_output):
-  """Returns a serving signature that applies tf.Transform to features."""
+def _image_augmentation(image_features):
+  """Perform image augmentation on batches of images .
+  Args:
+    image_features: a batch of image features
+  Returns:
+    The augmented image features
+  """
+  batch_size = tf.shape(image_features)[0]
+  image_features = tf.image.random_flip_left_right(image_features)
+  image_features = tf.image.resize_with_crop_or_pad(image_features, 250, 250)
+  image_features = tf.image.random_crop(image_features,
+                                        (batch_size, 224, 224, 3))
+  return image_features
 
-  if tf_transform_output is None:  # Transform component is not used.
-    @tf.function(input_signature=[
-        tf.TensorSpec(shape=[None], dtype=tf.string, name='examples')
-    ])
-    def transform_features_fn(serialized_tf_example):
-      """Returns the transformed_features to be fed as input to evaluator."""
-      raw_feature_spec = schema_utils.schema_as_feature_spec(
-          schema).feature_spec
-      raw_features = tf.io.parse_example(serialized_tf_example,
-                                         raw_feature_spec)
-      logging.info('eval_features = %s', raw_features)
-      return raw_features
-  else:  # Transform component exists.
-    # We need to track the layers in the model in order to save it.
-    # TODO(b/162357359): Revise once the bug is resolved.
-    model.tft_layer_eval = tf_transform_output.transform_features_layer()
 
-    @tf.function(input_signature=[
-        tf.TensorSpec(shape=[None], dtype=tf.string, name='examples')
-    ])
-    def transform_features_fn(serialized_tf_example):
-      """Returns the transformed_features to be fed as input to evaluator."""
-      raw_feature_spec = tf_transform_output.raw_feature_spec()
-      raw_features = tf.io.parse_example(serialized_tf_example,
-                                         raw_feature_spec)
-      transformed_features = model.tft_layer_eval(raw_features)
-      logging.info('eval_transformed_features = %s', transformed_features)
-      return transformed_features
-
-  return transform_features_fn
-
+def _data_augmentation(feature_dict):
+  """Perform data augmentation on batches of data.
+  Args:
+    feature_dict: a dict containing features of samples
+  Returns:
+    The feature dict with augmented features
+  """
+  image_features = feature_dict[features.transformed_name(_IMAGE_KEY)]
+  image_features = _image_augmentation(image_features)
+  feature_dict[features.transformed_name(_IMAGE_KEY)] = image_features
+  return feature_dict
 
 def _input_fn(file_pattern: List[str],
-              data_accessor: tfx.components.DataAccessor,
-              schema: schema_pb2.Schema,
-              label: str,
+              data_accessor: DataAccessor,
+              tf_transform_output: tft.TFTransformOutput,
+              is_train: bool = False,
               batch_size: int = 200) -> tf.data.Dataset:
   """Generates features and label for tuning/training.
-
   Args:
     file_pattern: List of paths or patterns of input tfrecord files.
     data_accessor: DataAccessor for converting input to RecordBatch.
-    schema: A schema proto of input data.
-    label: Name of the label.
+    tf_transform_output: A TFTransformOutput.
+    is_train: Whether the input dataset is train split or not.
     batch_size: representing the number of consecutive elements of returned
       dataset to combine in a single batch
-
   Returns:
     A dataset that contains (features, indices) tuple where features is a
       dictionary of Tensors, and indices is a single Tensor of label indices.
   """
-  return data_accessor.tf_dataset_factory(
+  dataset = data_accessor.tf_dataset_factory(
       file_pattern,
-      tfxio.TensorFlowDatasetOptions(batch_size=batch_size, label_key=label),
-      schema).repeat()
+      dataset_options.TensorFlowDatasetOptions(
+          batch_size=batch_size, label_key=features.transformed_name(_LABEL_KEY)),
+      tf_transform_output.transformed_metadata.schema)
+  # Apply data augmentation. We have to do data augmentation here because
+  # we need to apply data agumentation on-the-fly during training. If we put
+  # it in Transform, it will only be applied once on the whole dataset, which
+  # will lose the point of data augmentation.
+  if is_train:
+    dataset = dataset.map(lambda x, y: (_data_augmentation(x), y))
 
+  return dataset
 
-def _build_keras_model(feature_list: List[str]) -> tf.keras.Model:
-  """Creates a DNN Keras model for classifying penguin data.
-
+def _write_metadata(model_path: str, label_map_path: str, mean: List[float],
+                    std: List[float]):
+  """Add normalization option and label map TFLite metadata to the model.
   Args:
-    feature_list: List of feature names.
-
-  Returns:
-    A Keras Model.
+    model_path: The path of the TFLite model
+    label_map_path: The path of the label map file
+    mean: The mean value used to normalize input image tensor
+    std: The standard deviation used to normalize input image tensor
   """
-  # The model below is built with Functional API, please refer to
-  # https://www.tensorflow.org/guide/keras/overview for all API options.
-  inputs = [keras.layers.Input(shape=(1,), name=f) for f in feature_list]
-  d = keras.layers.concatenate(inputs)
-  for _ in range(constants.NUM_LAYERS):
-    d = keras.layers.Dense(constants.HIDDEN_LAYER_UNITS, activation='relu')(d)
-  outputs = keras.layers.Dense(
-      constants.OUTPUT_LAYER_UNITS, activation='softmax')(
-          d)
 
-  model = keras.Model(inputs=inputs, outputs=outputs)
+  # Creates flatbuffer for model information.
+  model_meta = _metadata_fb.ModelMetadataT()
+
+  # Creates flatbuffer for model input metadata.
+  # Here we add the input normalization info to input metadata.
+  input_meta = _metadata_fb.TensorMetadataT()
+  input_normalization = _metadata_fb.ProcessUnitT()
+  input_normalization.optionsType = (
+      _metadata_fb.ProcessUnitOptions.NormalizationOptions)
+  input_normalization.options = _metadata_fb.NormalizationOptionsT()
+  input_normalization.options.mean = mean
+  input_normalization.options.std = std
+  input_meta.processUnits = [input_normalization]
+
+  # Creates flatbuffer for model output metadata.
+  # Here we add label file to output metadata.
+  output_meta = _metadata_fb.TensorMetadataT()
+  label_file = _metadata_fb.AssociatedFileT()
+  label_file.name = os.path.basename(label_map_path)
+  label_file.type = _metadata_fb.AssociatedFileType.TENSOR_AXIS_LABELS
+  output_meta.associatedFiles = [label_file]
+
+  # Creates subgraph to contain input and output information,
+  # and add subgraph to the model information.
+  subgraph = _metadata_fb.SubGraphMetadataT()
+  subgraph.inputTensorMetadata = [input_meta]
+  subgraph.outputTensorMetadata = [output_meta]
+  model_meta.subgraphMetadata = [subgraph]
+
+  # Serialize the model metadata buffer we created above using flatbuffer
+  # builder.
+  b = flatbuffers.Builder(0)
+  b.Finish(
+      model_meta.Pack(b), _metadata.MetadataPopulator.METADATA_FILE_IDENTIFIER)
+  metadata_buf = b.Output()
+
+  # Populates metadata and label file to the model file.
+  populator = _metadata.MetadataPopulator.with_model_file(model_path)
+  populator.load_metadata_buffer(metadata_buf)
+  populator.load_associated_files([label_map_path])
+  populator.populate()
+
+def _freeze_model_by_percentage(model: tf.keras.Model, percentage: float):
+  """Freeze part of the model based on specified percentage.
+  Args:
+    model: The keras model need to be partially frozen
+    percentage: the percentage of layers to freeze
+  Raises:
+    ValueError: Invalid values.
+  """
+  if percentage < 0 or percentage > 1:
+    raise ValueError('Freeze percentage should between 0.0 and 1.0')
+
+  if not model.trainable:
+    raise ValueError(
+        'The model is not trainable, please set model.trainable to True')
+
+  num_layers = len(model.layers)
+  num_layers_to_freeze = int(num_layers * percentage)
+  for idx, layer in enumerate(model.layers):
+    if idx < num_layers_to_freeze:
+      layer.trainable = False
+    else:
+      layer.trainable = True
+
+def _build_keras_model() -> tf.keras.Model:
+  base_model = tf.keras.applications.MobileNet(
+      input_shape=(224, 224, 3),
+      include_top=False,
+      weights='imagenet',
+      pooling='avg')
+  base_model.input_spec = None
+
+  # We add a Dropout layer at the top of MobileNet backbone we just created to
+  # prevent overfiting, and then a Dense layer to classifying CIFAR10 objects
+  model = tf.keras.Sequential([
+      tf.keras.layers.InputLayer(
+          input_shape=(224, 224, 3), name=features.transformed_name(_IMAGE_KEY)),
+      base_model,
+      tf.keras.layers.Dropout(0.1),
+      tf.keras.layers.Dense(10, activation='softmax')
+  ])
+
+  # Freeze the whole MobileNet backbone to first train the top classifer only
+  _freeze_model_by_percentage(base_model, 1.0)
+
   model.compile(
-      optimizer=keras.optimizers.Adam(constants.LEARNING_RATE),
       loss='sparse_categorical_crossentropy',
-      metrics=[keras.metrics.SparseCategoricalAccuracy()])
+      optimizer=tf.keras.optimizers.RMSprop(lr=_CLASSIFIER_LEARNING_RATE),
+      metrics=['sparse_categorical_accuracy'])
+  model.summary(print_fn=absl.logging.info)
 
-  model.summary(print_fn=logging.info)
-  return model
+  return model, base_model
 
-
-# TFX Trainer will call this function.
-# TODO(step 4): Construct, train and save your model in this function.
-def run_fn(fn_args: tfx.components.FnArgs):
+def run_fn(fn_args: FnArgs):
   """Train the model based on given args.
-
   Args:
     fn_args: Holds args used to train the model as name/value pairs.
+  Raises:
+    ValueError: if invalid inputs.
   """
-  if fn_args.transform_output is None:  # Transform is not used.
-    tf_transform_output = None
-    schema = tfx.utils.parse_pbtxt_file(fn_args.schema_file,
-                                        schema_pb2.Schema())
-    feature_list = features.FEATURE_KEYS
-    label_key = features.LABEL_KEY
-  else:
-    tf_transform_output = tft.TFTransformOutput(fn_args.transform_output)
-    schema = tf_transform_output.transformed_metadata.schema
-    feature_list = [features.transformed_name(f) for f in features.FEATURE_KEYS]
-    label_key = features.transformed_name(features.LABEL_KEY)
-
-  mirrored_strategy = tf.distribute.MirroredStrategy()
-  train_batch_size = (
-      constants.TRAIN_BATCH_SIZE * mirrored_strategy.num_replicas_in_sync)
-  eval_batch_size = (
-      constants.EVAL_BATCH_SIZE * mirrored_strategy.num_replicas_in_sync)
+  tf_transform_output = tft.TFTransformOutput(fn_args.transform_output)
 
   train_dataset = _input_fn(
       fn_args.train_files,
       fn_args.data_accessor,
-      schema,
-      label_key,
-      batch_size=train_batch_size)
+      tf_transform_output,
+      is_train=True,
+      batch_size=_TRAIN_BATCH_SIZE)
   eval_dataset = _input_fn(
       fn_args.eval_files,
       fn_args.data_accessor,
-      schema,
-      label_key,
-      batch_size=eval_batch_size)
+      tf_transform_output,
+      is_train=False,
+      batch_size=_EVAL_BATCH_SIZE)
 
-  with mirrored_strategy.scope():
-    model = _build_keras_model(feature_list)
+  model, base_model = _build_keras_model()
 
+  absl.logging.info('Tensorboard logging to {}'.format(fn_args.model_run_dir))
   # Write logs to path
   tensorboard_callback = tf.keras.callbacks.TensorBoard(
       log_dir=fn_args.model_run_dir, update_freq='batch')
 
+  # Our training regime has two phases: we first freeze the backbone and train
+  # the newly added classifier only, then unfreeze part of the backbone and
+  # fine-tune with classifier jointly.
+  steps_per_epoch = int(_TRAIN_DATA_SIZE / _TRAIN_BATCH_SIZE)
+  total_epochs = int(fn_args.train_steps / steps_per_epoch)
+  if _CLASSIFIER_EPOCHS > total_epochs:
+    raise ValueError('Classifier epochs is greater than the total epochs')
+
+  absl.logging.info('Start training the top classifier')
   model.fit(
       train_dataset,
-      steps_per_epoch=fn_args.train_steps,
+      epochs=_CLASSIFIER_EPOCHS,
+      steps_per_epoch=steps_per_epoch,
       validation_data=eval_dataset,
       validation_steps=fn_args.eval_steps,
       callbacks=[tensorboard_callback])
 
+  absl.logging.info('Start fine-tuning the model')
+  # Unfreeze the top MobileNet layers and do joint fine-tuning
+  _freeze_model_by_percentage(base_model, 0.9)
+
+  # We need to recompile the model because layer properties have changed
+  model.compile(
+      loss='sparse_categorical_crossentropy',
+      optimizer=tf.keras.optimizers.RMSprop(lr=_FINETUNE_LEARNING_RATE),
+      metrics=['sparse_categorical_accuracy'])
+  model.summary(print_fn=absl.logging.info)
+
+  model.fit(
+      train_dataset,
+      initial_epoch=_CLASSIFIER_EPOCHS,
+      epochs=total_epochs,
+      steps_per_epoch=steps_per_epoch,
+      validation_data=eval_dataset,
+      validation_steps=fn_args.eval_steps,
+      callbacks=[tensorboard_callback])
+
+  # Prepare the TFLite model used for serving in MLKit
   signatures = {
       'serving_default':
-          _get_tf_examples_serving_signature(model, schema,
-                                             tf_transform_output),
-      'transform_features':
-          _get_transform_features_signature(model, schema, tf_transform_output),
+          _get_serve_image_fn(model).get_concrete_function(
+              tf.TensorSpec(
+                  shape=[None, 224, 224, 3],
+                  dtype=tf.float32,
+                  name=features.transformed_name(_IMAGE_KEY)))
   }
-  model.save(fn_args.serving_model_dir, save_format='tf', signatures=signatures)
+
+  temp_saving_model_dir = os.path.join(fn_args.serving_model_dir, 'temp')
+  model.save(temp_saving_model_dir, save_format='tf', signatures=signatures)
+
+  tfrw = rewriter_factory.create_rewriter(
+      rewriter_factory.TFLITE_REWRITER,
+      name='tflite_rewriter')
+  converters.rewrite_saved_model(temp_saving_model_dir,
+                                 fn_args.serving_model_dir, tfrw,
+                                 rewriter.ModelType.TFLITE_MODEL)
+
+  # Add necessary TFLite metadata to the model in order to use it within MLKit
+  # TODO(dzats@): Handle label map file path more properly, currently
+  # hard-coded.
+  tflite_model_path = os.path.join(fn_args.serving_model_dir,
+                                   _TFLITE_MODEL_NAME)
+  # TODO(dzats@): Extend the TFLite rewriter to be able to add TFLite metadata
+  #@ to the model.
+  _write_metadata(
+      model_path=tflite_model_path,
+      label_map_path=fn_args.custom_config['labels_path'],
+      mean=[127.5],
+      std=[127.5])
+
+  fileio.rmtree(temp_saving_model_dir)

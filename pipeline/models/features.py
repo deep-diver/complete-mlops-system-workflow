@@ -17,13 +17,8 @@ Define constants here that are common across all models
 including features names, label and size of vocabulary.
 """
 
-
-# TODO(step 3, 4): Define constants for features of the model.
-FEATURE_KEYS = [
-    'culmen_length_mm', 'culmen_depth_mm', 'flipper_length_mm', 'body_mass_g'
-]
-LABEL_KEY = 'species'
-
+IMAGE_KEY = 'image'
+LABEL_KEY = 'label'
 
 def transformed_name(key: str) -> str:
   """Generate the name of the transformed feature from original name."""
