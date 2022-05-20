@@ -25,6 +25,21 @@ _CLASSIFIER_EPOCHS = 30
 _IMAGE_KEY = 'image'
 _LABEL_KEY = 'label'
 
+def INFO(text: str):
+  absl.logging.info(text)
+
+def _get_signature(model): 
+  signatures = {
+      'serving_default':
+          _get_serve_image_fn(model).get_concrete_function(
+              tf.TensorSpec(
+                  shape=[None, 224, 224, 3],
+                  dtype=tf.float32,
+                  name=features.transformed_name(_IMAGE_KEY)))
+  }
+
+  return signatures  
+
 def _get_serve_image_fn(model):
 
   @tf.function
@@ -100,14 +115,6 @@ def _build_keras_model() -> tf.keras.Model:
       tf.keras.layers.Dense(10, activation='softmax')
   ])
 
-  # _freeze_model_by_percentage(base_model, 1.0)
-
-  # model.compile(
-  #     loss='sparse_categorical_crossentropy',
-  #     optimizer=tf.keras.optimizers.RMSprop(lr=_CLASSIFIER_LEARNING_RATE),
-  #     metrics=['sparse_categorical_accuracy'])
-  # model.summary(print_fn=absl.logging.info)
-
   return model, base_model
 
 def _compile(model_to_fit: tf.keras.Model, 
@@ -120,7 +127,7 @@ def _compile(model_to_fit: tf.keras.Model,
       loss='sparse_categorical_crossentropy',
       optimizer=tf.keras.optimizers.RMSprop(lr=learning_rate),
       metrics=['sparse_categorical_accuracy'])
-  model_to_fit.summary(print_fn=absl.logging.info)  
+  model_to_fit.summary(print_fn=INFO)  
 
   return model_to_fit, model_to_freeze
 
@@ -146,7 +153,7 @@ def run_fn(fn_args: FnArgs):
       is_train=False,
       batch_size=_EVAL_BATCH_SIZE)
 
-  absl.logging.info('Tensorboard logging to {}'.format(fn_args.model_run_dir))
+  INFO('Tensorboard logging to {}'.format(fn_args.model_run_dir))
   tensorboard_callback = tf.keras.callbacks.TensorBoard(
       log_dir=fn_args.model_run_dir, update_freq='batch')
 
@@ -154,7 +161,7 @@ def run_fn(fn_args: FnArgs):
   model, base_model = _compile(model, base_model, 1.0, 
                                _CLASSIFIER_LEARNING_RATE)
 
-  absl.logging.info('Start training the top classifier')
+  INFO('Start training the top classifier')
   model.fit(
       train_dataset,
       epochs=_CLASSIFIER_EPOCHS,
@@ -163,7 +170,7 @@ def run_fn(fn_args: FnArgs):
       validation_steps=fn_args.eval_steps,
       callbacks=[tensorboard_callback])
 
-  absl.logging.info('Start fine-tuning the model')
+  INFO('Start fine-tuning the model')
   model, base_model = _compile(model, base_model, 0.9, 
                                _FINETUNE_LEARNING_RATE)
 
@@ -176,17 +183,6 @@ def run_fn(fn_args: FnArgs):
       validation_steps=fn_args.eval_steps,
       callbacks=[tensorboard_callback])
 
-  # Prepare the TFLite model used for serving in MLKit
-  signatures = {
-      'serving_default':
-          _get_serve_image_fn(model).get_concrete_function(
-              tf.TensorSpec(
-                  shape=[None, 224, 224, 3],
-                  dtype=tf.float32,
-                  name=features.transformed_name(_IMAGE_KEY)))
-  }
-
-  temp_saving_model_dir = os.path.join(fn_args.serving_model_dir, 'temp')
-  model.save(temp_saving_model_dir, save_format='tf', signatures=signatures)
-
-  fileio.rmtree(temp_saving_model_dir)
+  model.save(fn_args.serving_model_dir, 
+             save_format='tf', 
+             signatures=_get_signature(model))
