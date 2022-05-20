@@ -1,4 +1,5 @@
 import tensorflow as tf
+from tensorflow.keras.applications import resnet50
 from models import features
 
 def preprocessing_fn(inputs):
@@ -15,8 +16,7 @@ def preprocessing_fn(inputs):
       inputs[features.IMAGE_KEY],
       fn_output_signature=(tf.uint8))
   image_features = tf.image.resize(image_features, [224, 224])  
-  image_features = tf.keras.applications.mobilenet.preprocess_input(
-      image_features)
+  image_features = resnet50.preprocess_input(image_features)
 
   outputs[features.transformed_name(features.IMAGE_KEY)] = image_features
   outputs[features.transformed_name(features.LABEL_KEY)] = inputs[features.LABEL_KEY]
