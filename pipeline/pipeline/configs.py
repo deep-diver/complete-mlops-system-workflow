@@ -56,20 +56,32 @@ EVAL_NUM_STEPS = 4
 # Change this value according to your use cases.
 EVAL_ACCURACY_THRESHOLD = 0.6
 
-# Google Cloud BigQuery related configs.
-# Use following configs to use BigQueryExampleGen as a data source.
-#
-# Beam args to use BigQueryExampleGen with Beam DirectRunner.
-#
-# BIG_QUERY_WITH_DIRECT_RUNNER_BEAM_PIPELINE_ARGS = [
-#    '--project=' + GOOGLE_CLOUD_PROJECT,
-#    '--temp_location=' + os.path.join('gs://', GCS_BUCKET_NAME, 'tmp'),
-#    ]
+# GCP_AI_PLATFORM_TRAINING_ARGS = {
+#     'project': GOOGLE_CLOUD_PROJECT,
+#     'region': GOOGLE_CLOUD_REGION,
+#     # Starting from TFX 0.14, training on AI Platform uses custom containers:
+#     # https://cloud.google.com/ml-engine/docs/containers-overview
+#     # You can specify a custom container here. If not specified, TFX will use
+#     # a public container image matching the installed version of TFX.
+#     # TODO(step 9): (Optional) Set your container name below.
+#     'masterConfig': {
+#       'imageUri': PIPELINE_IMAGE
+#     },
+#     # Note that if you do specify a custom container, ensure the entrypoint
+#     # calls into TFX's run_executor script (tfx/scripts/run_executor.py)
+# }
 
-# The query that extracts the examples from BigQuery.
-#
-# BIG_QUERY_QUERY = """
-#         SELECT ...
-#         FROM
-#         WHERE
-# """
+# A dict which contains the serving job parameters to be passed to Google
+# Cloud AI Platform. For the full set of parameters supported by Google Cloud AI
+# Platform, refer to
+# https://cloud.google.com/ml-engine/reference/rest/v1/projects.models
+# TODO(step 9): (Optional) Uncomment below to use AI Platform serving.
+# GCP_AI_PLATFORM_SERVING_ARGS = {
+#     'model_name': PIPELINE_NAME.replace('-','_'),  # '-' is not allowed.
+#     'project_id': GOOGLE_CLOUD_PROJECT,
+#     # The region to use when serving the model. See available regions here:
+#     # https://cloud.google.com/ml-engine/docs/regions
+#     # Note that serving currently only supports a single region:
+#     # https://cloud.google.com/ml-engine/reference/rest/v1/projects.models#Model  # pylint: disable=line-too-long
+#     'regions': [GOOGLE_CLOUD_REGION],
+# }
