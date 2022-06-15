@@ -1,18 +1,3 @@
-# Copyright 2020 Google LLC. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-"""Define LocalDagRunner to run the pipeline locally."""
-
 import os
 from absl import logging
 
@@ -58,19 +43,12 @@ def run():
           pipeline_name=configs.PIPELINE_NAME,
           pipeline_root=PIPELINE_ROOT,
           data_path=DATA_PATH,
-          # NOTE: Use `query` instead of `data_path` to use BigQueryExampleGen.
-          # query=configs.BIG_QUERY_QUERY,
-          # NOTE: Set the path of the customized schema if any.
-          # schema_path=generated_schema_path,
           preprocessing_fn=configs.PREPROCESSING_FN,
           run_fn=configs.RUN_FN,
           train_args=tfx.proto.TrainArgs(num_steps=configs.TRAIN_NUM_STEPS),
           eval_args=tfx.proto.EvalArgs(num_steps=configs.EVAL_NUM_STEPS),
           eval_accuracy_threshold=configs.EVAL_ACCURACY_THRESHOLD,
           serving_model_dir=SERVING_MODEL_DIR,
-          # NOTE: Provide GCP configs to use BigQuery with Beam DirectRunner.
-          # beam_pipeline_args=configs.
-          # BIG_QUERY_WITH_DIRECT_RUNNER_BEAM_PIPELINE_ARGS,
           metadata_connection_config=tfx.orchestration.metadata
           .sqlite_metadata_connection_config(METADATA_PATH)))
 
