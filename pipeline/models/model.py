@@ -2,7 +2,7 @@ import os
 from typing import List
 import absl
 import tensorflow as tf
-from tf.keras.optimizers import Adam
+from tensorflow.keras.optimizers import Adam
 import tensorflow_transform as tft
 
 from tfx.components.trainer.fn_args_utils import DataAccessor

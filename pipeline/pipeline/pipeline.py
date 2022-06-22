@@ -71,50 +71,50 @@ def create_pipeline(
           type=tfx.types.standard_artifacts.ModelBlessing)).with_id(
               'latest_blessed_model_resolver')
   # TODO(step 5): Uncomment here to add Resolver to the pipeline.
-  # components.append(model_resolver)
+  components.append(model_resolver)
 
-  # Uses TFMA to compute a evaluation statistics over features of a model and
-  # perform quality validation of a candidate model (compared to a baseline).
-  eval_config = tfma.EvalConfig(
-      model_specs=[
-          tfma.ModelSpec(
-              signature_name='serving_default',
-              label_key=features.LABEL_KEY,
-              # Use transformed label key if Transform is used.
-              # label_key=features.transformed_name(features.LABEL_KEY),
-              preprocessing_function_names=['transform_features'])
-      ],
-      slicing_specs=[tfma.SlicingSpec()],
-      metrics_specs=[
-          tfma.MetricsSpec(metrics=[
-              tfma.MetricConfig(
-                  class_name='SparseCategoricalAccuracy',
-                  threshold=tfma.MetricThreshold(
-                      value_threshold=tfma.GenericValueThreshold(
-                          lower_bound={'value': eval_accuracy_threshold}),
-                      change_threshold=tfma.GenericChangeThreshold(
-                          direction=tfma.MetricDirection.HIGHER_IS_BETTER,
-                          absolute={'value': -1e-10})))
-          ])
-      ])
+#   # Uses TFMA to compute a evaluation statistics over features of a model and
+#   # perform quality validation of a candidate model (compared to a baseline).
+#   eval_config = tfma.EvalConfig(
+#       model_specs=[
+#           tfma.ModelSpec(
+#               signature_name='serving_default',
+#               label_key=features.LABEL_KEY,
+#               # Use transformed label key if Transform is used.
+#               # label_key=features.transformed_name(features.LABEL_KEY),
+#               preprocessing_function_names=['transform_features'])
+#       ],
+#       slicing_specs=[tfma.SlicingSpec()],
+#       metrics_specs=[
+#           tfma.MetricsSpec(metrics=[
+#               tfma.MetricConfig(
+#                   class_name='SparseCategoricalAccuracy',
+#                   threshold=tfma.MetricThreshold(
+#                       value_threshold=tfma.GenericValueThreshold(
+#                           lower_bound={'value': eval_accuracy_threshold}),
+#                       change_threshold=tfma.GenericChangeThreshold(
+#                           direction=tfma.MetricDirection.HIGHER_IS_BETTER,
+#                           absolute={'value': -1e-10})))
+#           ])
+#       ])
   evaluator = tfx.components.Evaluator(  # pylint: disable=unused-variable
       examples=example_gen.outputs['examples'],
       model=trainer.outputs['model'],
-      baseline_model=model_resolver.outputs['model'],
+      baseline_model=model_resolver.outputs['model'])
       # Change threshold will be ignored if there is no baseline (first run).
-      eval_config=eval_config)
+    #   eval_config=eval_config)
   # TODO(step 5): Uncomment here to add Evaluator to the pipeline.
-  # components.append(evaluator)
+#   components.append(evaluator)
 
   # Pushes the model to a file destination if check passed.
   pusher = tfx.components.Pusher(  # pylint: disable=unused-variable
       model=trainer.outputs['model'],
-      model_blessing=evaluator.outputs['blessing'],
+    #   model_blessing=evaluator.outputs['blessing'],
       push_destination=tfx.proto.PushDestination(
           filesystem=tfx.proto.PushDestination.Filesystem(
               base_directory=serving_model_dir)))
   # TODO(step 5): Uncomment here to add Pusher to the pipeline.
-  # components.append(pusher)
+  components.append(pusher)
 
   return tfx.dsl.Pipeline(
       pipeline_name=pipeline_name,
@@ -122,7 +122,7 @@ def create_pipeline(
       components=components,
       # Change this value to control caching of execution results. Default value
       # is `False`.
-      # enable_cache=True,
+      enable_cache=True,
       metadata_connection_config=metadata_connection_config,
       beam_pipeline_args=beam_pipeline_args,
   )
