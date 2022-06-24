@@ -13,8 +13,6 @@ from tfx.components.trainer.rewriting import rewriter_factory
 from tfx.dsl.io import fileio
 from tfx_bsl.tfxio import dataset_options
 
-from models import features
-
 _TRAIN_DATA_SIZE = 128
 _EVAL_DATA_SIZE = 128
 _TRAIN_BATCH_SIZE = 32
@@ -29,6 +27,9 @@ _LABEL_KEY = 'label'
 def INFO(text: str):
   absl.logging.info(text)
 
+def _transformed_name(key: str) -> str:
+  return key + '_xf'
+
 def _get_signature(model): 
   signatures = {
       'serving_default':
@@ -36,7 +37,7 @@ def _get_signature(model):
               tf.TensorSpec(
                   shape=[None, 224, 224, 3],
                   dtype=tf.float32,
-                  name=features.transformed_name(_IMAGE_KEY)))
+                  name=_transformed_name(_IMAGE_KEY)))
   }
 
   return signatures  
@@ -59,9 +60,9 @@ def _image_augmentation(image_features):
 
 
 def _data_augmentation(feature_dict):
-  image_features = feature_dict[features.transformed_name(_IMAGE_KEY)]
+  image_features = feature_dict[_transformed_name(_IMAGE_KEY)]
   image_features = _image_augmentation(image_features)
-  feature_dict[features.transformed_name(_IMAGE_KEY)] = image_features
+  feature_dict[_transformed_name(_IMAGE_KEY)] = image_features
   return feature_dict
 
 def _input_fn(file_pattern: List[str],
@@ -73,7 +74,7 @@ def _input_fn(file_pattern: List[str],
       file_pattern,
       dataset_options.TensorFlowDatasetOptions(
           batch_size=batch_size, 
-          label_key=features.transformed_name(_LABEL_KEY)
+          label_key=_transformed_name(_LABEL_KEY)
       ),
       tf_transform_output.transformed_metadata.schema)
 
@@ -109,7 +110,7 @@ def _build_keras_model() -> tf.keras.Model:
 
   model = tf.keras.Sequential([
       tf.keras.layers.InputLayer(
-          input_shape=(224, 224, 3), name=features.transformed_name(_IMAGE_KEY)),
+          input_shape=(224, 224, 3), name=_transformed_name(_IMAGE_KEY)),
       base_model,
       tf.keras.layers.Dropout(0.1),
       tf.keras.layers.Dense(10, activation='softmax')

@@ -1,6 +1,8 @@
 import tensorflow as tf
 from tensorflow.keras.applications import resnet50
-from models import features
+
+def _transformed_name(key: str) -> str:
+  return key + '_xf'
 
 def preprocessing_fn(inputs):
   """tf.transform's callback function for preprocessing inputs.
@@ -18,7 +20,7 @@ def preprocessing_fn(inputs):
   image_features = tf.image.resize(image_features, [224, 224])  
   image_features = resnet50.preprocess_input(image_features)
 
-  outputs[features.transformed_name(features.IMAGE_KEY)] = image_features
-  outputs[features.transformed_name(features.LABEL_KEY)] = inputs[features.LABEL_KEY]
+  outputs[_transformed_name(features.IMAGE_KEY)] = image_features
+  outputs[_transformed_name(features.LABEL_KEY)] = inputs[features.LABEL_KEY]
 
   return outputs

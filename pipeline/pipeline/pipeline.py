@@ -2,7 +2,6 @@ from typing import List, Optional
 
 import tensorflow_model_analysis as tfma
 from tfx import v1 as tfx
-from models import features
 
 from ml_metadata.proto import metadata_store_pb2
 from tfx.proto import example_gen_pb2
