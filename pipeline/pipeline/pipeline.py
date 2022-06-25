@@ -2,10 +2,29 @@ from typing import List, Optional
 
 import tensorflow_model_analysis as tfma
 from tfx import v1 as tfx
-from models import features
 
 from ml_metadata.proto import metadata_store_pb2
 from tfx.proto import example_gen_pb2
+
+import absl
+import tensorflow_model_analysis as tfma
+from tfx.components import Evaluator
+from tfx.components import ExampleValidator
+from tfx.components import ImportExampleGen
+from tfx.components import Pusher
+from tfx.components import SchemaGen
+from tfx.components import StatisticsGen
+from tfx.components import Trainer
+from tfx.components import Transform
+from tfx.dsl.components.common import resolver
+from tfx.dsl.experimental import latest_blessed_model_resolver
+from tfx.orchestration import pipeline
+from tfx.proto import example_gen_pb2
+from tfx.proto import pusher_pb2
+from tfx.proto import trainer_pb2
+from tfx.types import Channel
+from tfx.types.standard_artifacts import Model
+from tfx.types.standard_artifacts import ModelBlessing
 
 def create_pipeline(
     pipeline_name: str,
@@ -13,8 +32,8 @@ def create_pipeline(
     data_path: str,
     preprocessing_fn: str,
     run_fn: str,
-    train_args: tfx.proto.TrainArgs,
-    eval_args: tfx.proto.EvalArgs,
+    train_args: trainer_pb2.TrainArgs,
+    eval_args: trainer_pb2.EvalArgs,
     eval_accuracy_threshold: float,
     serving_model_dir: str,
     schema_path: Optional[str] = None,
@@ -28,15 +47,15 @@ def create_pipeline(
       example_gen_pb2.Input.Split(name='train', pattern='train/*'),
       example_gen_pb2.Input.Split(name='eval', pattern='test/*')
   ])
-  example_gen = tfx.components.ImportExampleGen(input_base=data_path, input_config=input_config)
+  example_gen = ImportExampleGen(input_base=data_path, input_config=input_config)
   components.append(example_gen)
 
-  statistics_gen = tfx.components.StatisticsGen(
+  statistics_gen = StatisticsGen(
       examples=example_gen.outputs['examples'])
   components.append(statistics_gen)
 
   if schema_path is None:
-    schema_gen = tfx.components.SchemaGen(
+    schema_gen = SchemaGen(
         statistics=statistics_gen.outputs['statistics'])
     components.append(schema_gen)
   else:
@@ -48,13 +67,13 @@ def create_pipeline(
 #       schema=schema_gen.outputs['schema'])
 #   components.append(example_validator)
 
-  transform = tfx.components.Transform(  
+  transform = Transform(  
       examples=example_gen.outputs['examples'],
       schema=schema_gen.outputs['schema'],
       preprocessing_fn=preprocessing_fn)
   components.append(transform)
 
-  trainer = tfx.components.Trainer(
+  trainer = Trainer(
       run_fn=run_fn,
       examples=transform.outputs['transformed_examples'],
       transform_graph=transform.outputs['transform_graph'],
@@ -63,27 +82,17 @@ def create_pipeline(
       eval_args=eval_args)
   components.append(trainer)
 
-  # Get the latest blessed model for model validation.
-  model_resolver = tfx.dsl.Resolver(
-      strategy_class=tfx.dsl.experimental.LatestBlessedModelStrategy,
-      model=tfx.dsl.Channel(type=tfx.types.standard_artifacts.Model),
-      model_blessing=tfx.dsl.Channel(
-          type=tfx.types.standard_artifacts.ModelBlessing)).with_id(
-              'latest_blessed_model_resolver')
-  # TODO(step 5): Uncomment here to add Resolver to the pipeline.
-  # components.append(model_resolver)
+  model_resolver = resolver.Resolver(
+      strategy_class=latest_blessed_model_resolver.LatestBlessedModelResolver,
+      model=Channel(type=Model),
+      model_blessing=Channel(
+          type=ModelBlessing)).with_id('latest_blessed_model_resolver')
+  components.append(model_resolver)
 
-  # Uses TFMA to compute a evaluation statistics over features of a model and
-  # perform quality validation of a candidate model (compared to a baseline).
+  # Uses TFMA to compute evaluation statistics over features of a model and
+  # perform quality validation of a candidate model (compare to a baseline).
   eval_config = tfma.EvalConfig(
-      model_specs=[
-          tfma.ModelSpec(
-              signature_name='serving_default',
-              label_key=features.LABEL_KEY,
-              # Use transformed label key if Transform is used.
-              # label_key=features.transformed_name(features.LABEL_KEY),
-              preprocessing_function_names=['transform_features'])
-      ],
+      model_specs=[tfma.ModelSpec(label_key='label_xf')],
       slicing_specs=[tfma.SlicingSpec()],
       metrics_specs=[
           tfma.MetricsSpec(metrics=[
@@ -91,38 +100,37 @@ def create_pipeline(
                   class_name='SparseCategoricalAccuracy',
                   threshold=tfma.MetricThreshold(
                       value_threshold=tfma.GenericValueThreshold(
-                          lower_bound={'value': eval_accuracy_threshold}),
+                          lower_bound={'value': 0.55}),
+                      # Change threshold will be ignored if there is no
+                      # baseline model resolved from MLMD (first run).
                       change_threshold=tfma.GenericChangeThreshold(
                           direction=tfma.MetricDirection.HIGHER_IS_BETTER,
-                          absolute={'value': -1e-10})))
+                          absolute={'value': -1e-3})))
           ])
       ])
-  evaluator = tfx.components.Evaluator(  # pylint: disable=unused-variable
-      examples=example_gen.outputs['examples'],
+
+  evaluator = Evaluator(
+      examples=transform.outputs['transformed_examples'],
       model=trainer.outputs['model'],
       baseline_model=model_resolver.outputs['model'],
-      # Change threshold will be ignored if there is no baseline (first run).
       eval_config=eval_config)
-  # TODO(step 5): Uncomment here to add Evaluator to the pipeline.
-  # components.append(evaluator)
+  components.append(evaluator)
 
-  # Pushes the model to a file destination if check passed.
-  pusher = tfx.components.Pusher(  # pylint: disable=unused-variable
+  pusher = Pusher(
       model=trainer.outputs['model'],
       model_blessing=evaluator.outputs['blessing'],
-      push_destination=tfx.proto.PushDestination(
-          filesystem=tfx.proto.PushDestination.Filesystem(
+      push_destination=pusher_pb2.PushDestination(
+          filesystem=pusher_pb2.PushDestination.Filesystem(
               base_directory=serving_model_dir)))
-  # TODO(step 5): Uncomment here to add Pusher to the pipeline.
-  # components.append(pusher)
+  components.append(pusher)
 
-  return tfx.dsl.Pipeline(
+  return pipeline.Pipeline(
       pipeline_name=pipeline_name,
       pipeline_root=pipeline_root,
       components=components,
       # Change this value to control caching of execution results. Default value
       # is `False`.
-      # enable_cache=True,
+      enable_cache=True,
       metadata_connection_config=metadata_connection_config,
       beam_pipeline_args=beam_pipeline_args,
   )
