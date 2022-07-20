@@ -1,7 +1,8 @@
 import os  # pylint: disable=unused-import
+import tfx
 
 # Pipeline name will be used to identify this pipeline.
-PIPELINE_NAME = 'img_classification'
+PIPELINE_NAME = 'img-classification'
 
 # GCP related configs.
 
@@ -12,15 +13,15 @@ try:
   try:
     _, GOOGLE_CLOUD_PROJECT = google.auth.default()
   except google.auth.exceptions.DefaultCredentialsError:
-    GOOGLE_CLOUD_PROJECT = ''
+    GOOGLE_CLOUD_PROJECT = 'gcp-ml-172005'
 except ImportError:
-  GOOGLE_CLOUD_PROJECT = ''
+  GOOGLE_CLOUD_PROJECT = 'gcp-ml-172005'
 
 # Specify your GCS bucket name here. You have to use GCS to store output files
 # when running a pipeline with Kubeflow Pipeline on GCP or when running a job
 # using Dataflow. Default is '<gcp_project_name>-kubeflowpipelines-default'.
 # This bucket is created automatically when you deploy KFP from marketplace.
-GCS_BUCKET_NAME = GOOGLE_CLOUD_PROJECT + '-kubeflowpipelines-default'
+GCS_BUCKET_NAME = GOOGLE_CLOUD_PROJECT + '-complete-mlops'
 
 # Following image will be used to run pipeline components run if Kubeflow
 # Pipelines used.
@@ -35,6 +36,26 @@ EVAL_NUM_STEPS = 4
 
 # Change this value according to your use cases.
 EVAL_ACCURACY_THRESHOLD = 0.6
+
+# Specify training worker configurations. To minimize costs we can even specify two
+# different configurations: a beefier machine for the Endpoint model and slightly less
+# powerful machine for the mobile model.
+TRAINING_JOB_SPEC = {
+    "project": GOOGLE_CLOUD_PROJECT,
+    "worker_pool_specs": [
+        {
+            "machine_spec": {
+                "machine_type": "n1-standard-4",
+                "accelerator_type": "NVIDIA_TESLA_K80",
+                "accelerator_count": 1,
+            },
+            "replica_count": 1,
+            "container_spec": {
+                "image_uri": "gcr.io/tfx-oss-public/tfx:{}".format(tfx.__version__),
+            },
+        }
+    ],
+}
 
 # GCP_AI_PLATFORM_TRAINING_ARGS = {
 #     'project': GOOGLE_CLOUD_PROJECT,

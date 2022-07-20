@@ -2,6 +2,7 @@ import os
 from absl import logging
 
 from tfx import v1 as tfx
+from tfx.orchestration.kubeflow.v2 import kubeflow_v2_dag_runner
 from pipeline import configs
 from pipeline import pipeline
 
@@ -29,22 +30,14 @@ SERVING_MODEL_DIR = os.path.join(PIPELINE_ROOT, 'serving_model')
 # dependency currently, so this means CsvExampleGen cannot be used with Dataflow
 # (step 8 in the template notebook).
 
-DATA_PATH = 'gs://{}/img_classification/data/penguin/'.format(configs.GCS_BUCKET_NAME)
-
+DATA_PATH = 'gs://{}/data/'.format(configs.GCS_BUCKET_NAME)
 
 def run():
-  metadata_config = tfx.orchestration.experimental.get_default_kubeflow_metadata_config(
-  )
+  runner_config = kubeflow_v2_dag_runner.KubeflowV2DagRunnerConfig(
+      default_image=configs.PIPELINE_IMAGE)
 
-  runner_config = tfx.orchestration.experimental.KubeflowDagRunnerConfig(
-      kubeflow_metadata_config=metadata_config,
-      tfx_image=configs.PIPELINE_IMAGE)
-  pod_labels = {
-      'add-pod-env': 'true',
-      tfx.orchestration.experimental.LABEL_KFP_SDK_ENV: 'tfx-template'
-  }
-  tfx.orchestration.experimental.KubeflowDagRunner(
-      config=runner_config, pod_labels_to_attach=pod_labels
+  kubeflow_v2_dag_runner.KubeflowV2DagRunner(
+      config=runner_config
   ).run(
       pipeline.create_pipeline(
           pipeline_name=configs.PIPELINE_NAME,
@@ -55,11 +48,12 @@ def run():
           preprocessing_fn=configs.PREPROCESSING_FN,
           run_fn=configs.RUN_FN,
           train_args=tfx.proto.TrainArgs(num_steps=configs.TRAIN_NUM_STEPS),
+          train_cloud_region='us-central1-a',
+          train_cloud_args=configs.TRAINING_JOB_SPEC,
           eval_args=tfx.proto.EvalArgs(num_steps=configs.EVAL_NUM_STEPS),
           eval_accuracy_threshold=configs.EVAL_ACCURACY_THRESHOLD,
           serving_model_dir=SERVING_MODEL_DIR,
       ))
-
 
 if __name__ == '__main__':
   logging.set_verbosity(logging.INFO)
