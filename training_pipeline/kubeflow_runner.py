@@ -8,8 +8,8 @@ from tfx.orchestration.data_types import RuntimeParameter
 from tfx.proto import pusher_pb2
 from tfx.proto import trainer_pb2
 
-from pipeline import configs
-from pipeline import pipeline
+from training_pipeline import configs
+from training_pipeline import pipeline
 
 OUTPUT_DIR = os.path.join('gs://', configs.GCS_BUCKET_NAME)
 PIPELINE_ROOT = os.path.join(OUTPUT_DIR, 'tfx_pipeline_output', configs.PIPELINE_NAME)
