@@ -27,7 +27,7 @@ def run():
           modules={
             "preprocessing_fn": configs.PREPROCESSING_FN,
             "training_fn": configs.TRAINING_FN,
-          }
+          },
           train_args=proto.TrainArgs(
             num_steps=configs.TRAIN_NUM_STEPS
           ),
