@@ -55,7 +55,6 @@ GCP_AI_PLATFORM_SERVING_ARGS = {
     vertex_const.VERTEX_CONTAINER_IMAGE_URI_KEY : 'us-docker.pkg.dev/vertex-ai/prediction/tf2-cpu.2-8:latest',
     vertex_const.SERVING_ARGS_KEY               : {
       'project_id'                  : GOOGLE_CLOUD_PROJECT,
-      'model_name'                  : PIPELINE_NAME.replace('-','_'),
       'deployed_model_display_name' : PIPELINE_NAME.replace('-','_'),
       'endpoint_name'               : 'prediction-' + PIPELINE_NAME.replace('-', '_'),
       'traffic_split'               : {"0" : 100},
