@@ -50,16 +50,17 @@ GCP_AI_PLATFORM_TRAINING_ARGS = {
 }
 
 GCP_AI_PLATFORM_SERVING_ARGS = {
-    vertex_const.SERVING_ARGS_KEY: {
-      'model_name': PIPELINE_NAME.replace('-','_'),
-      'project_id': GOOGLE_CLOUD_PROJECT,
-      'regions': [GOOGLE_CLOUD_REGION],
-      'deployed_model_display_name': PIPELINE_NAME.replace('-','_'),
-      'traffic_split': {
-        "0": 100
-      },
-      'machine_type': "n1-standard-4",
-      'min_replica_count': 1,
-      'max_replica_count': 1,
+    vertex_const.ENABLE_VERTEX_KEY              : True,
+    vertex_const.VERTEX_REGION_KEY              : GOOGLE_CLOUD_REGION,
+    vertex_const.VERTEX_CONTAINER_IMAGE_URI_KEY : 'us-docker.pkg.dev/vertex-ai/prediction/tf2-cpu.2-8:latest',
+    vertex_const.SERVING_ARGS_KEY               : {
+      'project_id'                  : GOOGLE_CLOUD_PROJECT,
+      'model_name'                  : PIPELINE_NAME.replace('-','_'),
+      'deployed_model_display_name' : PIPELINE_NAME.replace('-','_'),
+      'endpoint_name'               : 'prediction-' + PIPELINE_NAME.replace('-', '_'),
+      'traffic_split'               : {"0" : 100},
+      'machine_type'                : "n1-standard-4",
+      'min_replica_count'           : 1,
+      'max_replica_count'           : 1,
     }
 }
