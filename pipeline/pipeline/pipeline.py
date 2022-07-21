@@ -16,6 +16,7 @@ from tfx.components import SchemaGen
 from tfx.components import StatisticsGen
 from tfx.components import Trainer
 from tfx.extensions.google_cloud_ai_platform.trainer.component import Trainer as VertexTrainer
+from tfx.extensions.google_cloud_ai_platform.pusher.component import Pusher as VertexPusher
 from tfx.components import Transform
 from tfx.dsl.components.common import resolver
 from tfx.dsl.experimental import latest_blessed_model_resolver
@@ -124,12 +125,12 @@ def create_pipeline(
     }
     if ai_platform_serving_args:
         pusher_args['custom_config'] = ai_platform_serving_args
-        pusher = tfx.extensions.google_cloud_ai_platform.Pusher(**pusher_args)  # pylint: disable=unused-variable
+        pusher = VertexPusher(**pusher_args)  # pylint: disable=unused-variable
     else:
         pusher_args['push_destination'] = tfx.proto.PushDestination(
             filesystem=tfx.proto.PushDestination.Filesystem(
                 base_directory=serving_model_dir))
-        pusher = tfx.components.Pusher(**pusher_args)  # pylint: disable=unused-variable
+        pusher = Pusher(**pusher_args)  # pylint: disable=unused-variable
     components.append(pusher)
     
     return pipeline.Pipeline(
