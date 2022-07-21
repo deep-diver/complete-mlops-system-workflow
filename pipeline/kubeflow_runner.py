@@ -36,7 +36,6 @@ def run():
           eval_args=trainer_pb2.EvalArgs(
             num_steps=configs.EVAL_NUM_STEPS
           ),
-          eval_accuracy_threshold=configs.EVAL_ACCURACY_THRESHOLD,
           serving_model_dir=SERVING_MODEL_DIR,
 
           ai_platform_training_args=configs.GCP_AI_PLATFORM_TRAINING_ARGS
