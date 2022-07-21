@@ -34,7 +34,6 @@ SERVING_MODEL_DIR = os.path.join(PIPELINE_ROOT, 'serving_model')
 # TODO(step 4): Specify the path for your data.
 DATA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data')
 
-
 def run():
   """Define a pipeline."""
 
@@ -43,11 +42,12 @@ def run():
           pipeline_name=configs.PIPELINE_NAME,
           pipeline_root=PIPELINE_ROOT,
           data_path=DATA_PATH,
-          preprocessing_fn=configs.PREPROCESSING_FN,
-          run_fn=configs.RUN_FN,
+          modules={
+            "preprocessing_fn": configs.PREPROCESSING_FN,
+            "training_fn": configs.TRAINING_FN,
+          },
           train_args=tfx.proto.TrainArgs(num_steps=configs.TRAIN_NUM_STEPS),
           eval_args=tfx.proto.EvalArgs(num_steps=configs.EVAL_NUM_STEPS),
-          eval_accuracy_threshold=configs.EVAL_ACCURACY_THRESHOLD,
           serving_model_dir=SERVING_MODEL_DIR,
           metadata_connection_config=tfx.orchestration.metadata
           .sqlite_metadata_connection_config(METADATA_PATH)))

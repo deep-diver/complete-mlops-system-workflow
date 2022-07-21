@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Any, Dict, List, Optional, Text
 
 import tensorflow_model_analysis as tfma
 from tfx import v1 as tfx
@@ -15,33 +15,28 @@ from tfx.components import Pusher
 from tfx.components import SchemaGen
 from tfx.components import StatisticsGen
 from tfx.components import Trainer
+from tfx.extensions.google_cloud_ai_platform.trainer.component import Trainer as VertexTrainer
 from tfx.components import Transform
 from tfx.dsl.components.common import resolver
 from tfx.dsl.experimental import latest_blessed_model_resolver
 from tfx.orchestration import pipeline
 from tfx.proto import example_gen_pb2
-from tfx.proto import pusher_pb2
 from tfx.proto import trainer_pb2
 from tfx.types import Channel
 from tfx.types.standard_artifacts import Model
 from tfx.types.standard_artifacts import ModelBlessing
 
 def create_pipeline(
-    pipeline_name: str,
-    pipeline_root: str,
-    data_path: str,
-    preprocessing_fn: str,
-    run_fn: str,
+    pipeline_name: Text,
+    pipeline_root: Text,
+    data_path: Text,
+    modules: Dict[Text, Text],
     train_args: trainer_pb2.TrainArgs,
-    train_cloud_region: str,
-    train_cloud_args,
     eval_args: trainer_pb2.EvalArgs,
-    eval_accuracy_threshold: float,
-    serving_model_dir: str,
-    schema_path: Optional[str] = None,
-    metadata_connection_config: Optional[
-        metadata_store_pb2.ConnectionConfig] = None,
-    beam_pipeline_args: Optional[List[str]] = None,
+    serving_model_dir: Text,
+    metadata_connection_config: Optional[metadata_store_pb2.ConnectionConfig] = None,
+    ai_platform_training_args: Optional[Dict[Text, Text]] = None,
+    ai_platform_serving_args: Optional[Dict[Text, Any]] = None,
 ) -> tfx.dsl.Pipeline:
     components = []
 
@@ -56,13 +51,9 @@ def create_pipeline(
         examples=example_gen.outputs['examples'])
     components.append(statistics_gen)
 
-    if schema_path is None:
-        schema_gen = SchemaGen(
-            statistics=statistics_gen.outputs['statistics'])
-        components.append(schema_gen)
-    else:
-        schema_gen = tfx.components.ImportSchemaGen(schema_file=schema_path)
-        components.append(schema_gen)
+    schema_gen = SchemaGen(
+        statistics=statistics_gen.outputs['statistics'], infer_feature_shape=True)
+    components.append(schema_gen)
 
     #   example_validator = tfx.components.ExampleValidator(  
     #       statistics=statistics_gen.outputs['statistics'],
@@ -72,34 +63,23 @@ def create_pipeline(
     transform = Transform(  
         examples=example_gen.outputs['examples'],
         schema=schema_gen.outputs['schema'],
-        preprocessing_fn=preprocessing_fn)
+        preprocessing_fn=modules["preprocessing_fn"])
     components.append(transform)
 
-    # trainer = Trainer(
-    #     run_fn=run_fn,
-    #     examples=transform.outputs['transformed_examples'],
-    #     transform_graph=transform.outputs['transform_graph'],
-    #     schema=schema_gen.outputs['schema'],
-    #     train_args=train_args,
-    #     eval_args=eval_args)
-    # components.append(trainer)
-
-    # Trainer
     trainer_args = {
-        'run_fn': run_fn,
+        'run_fn': modules["training_fn"],
         'transformed_examples': transform.outputs['transformed_examples'],
         'schema': schema_gen.outputs['schema'],
         'transform_graph': transform.outputs['transform_graph'],
         'train_args': train_args,
         'eval_args': eval_args,
-        'custom_config': {
-            tfx.extensions.google_cloud_ai_platform.ENABLE_VERTEX_KEY: True,
-            tfx.extensions.google_cloud_ai_platform.VERTEX_REGION_KEY: train_cloud_region,
-            tfx.extensions.google_cloud_ai_platform.TRAINING_ARGS_KEY: train_cloud_args,
-            "use_gpu": True,
-        },        
-    }    
-    trainer = tfx.extensions.google_cloud_ai_platform.Trainer(**trainer_args)
+    }
+    if ai_platform_training_args:
+        trainer_args["custom_config"] = ai_platform_training_args
+        trainer = VertexTrainer(**trainer_args)
+    else:
+        trainer = Trainer(**trainer_args)
+
     components.append(trainer)
 
     model_resolver = resolver.Resolver(
@@ -136,21 +116,26 @@ def create_pipeline(
         eval_config=eval_config)
     components.append(evaluator)
 
-    pusher = Pusher(
-        model=trainer.outputs['model'],
-        model_blessing=evaluator.outputs['blessing'],
-        push_destination=pusher_pb2.PushDestination(
-            filesystem=pusher_pb2.PushDestination.Filesystem(
-                base_directory=serving_model_dir)))
+    pusher_args = {
+        'model':
+            trainer.outputs['model'],
+        'model_blessing':
+            evaluator.outputs['blessing'],
+    }
+    if ai_platform_serving_args:
+        pusher_args['custom_config'] = ai_platform_serving_args
+        pusher = tfx.extensions.google_cloud_ai_platform.Pusher(**pusher_args)  # pylint: disable=unused-variable
+    else:
+        pusher_args['push_destination'] = tfx.proto.PushDestination(
+            filesystem=tfx.proto.PushDestination.Filesystem(
+                base_directory=serving_model_dir))
+        pusher = tfx.components.Pusher(**pusher_args)  # pylint: disable=unused-variable
     components.append(pusher)
-
+    
     return pipeline.Pipeline(
         pipeline_name=pipeline_name,
         pipeline_root=pipeline_root,
         components=components,
-        # Change this value to control caching of execution results. Default value
-        # is `False`.
         enable_cache=True,
         metadata_connection_config=metadata_connection_config,
-        beam_pipeline_args=beam_pipeline_args,
     )
