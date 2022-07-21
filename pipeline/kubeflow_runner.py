@@ -38,7 +38,8 @@ def run():
           ),
           serving_model_dir=SERVING_MODEL_DIR,
 
-          ai_platform_training_args=configs.GCP_AI_PLATFORM_TRAINING_ARGS
+          ai_platform_training_args=configs.GCP_AI_PLATFORM_TRAINING_ARGS,
+          ai_platform_serving_args=configs.GCP_AI_PLATFORM_SERVING_ARGS
       ))
 
 if __name__ == '__main__':
