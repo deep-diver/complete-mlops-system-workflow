@@ -4,6 +4,8 @@ from absl import logging
 from tfx import v1 as tfx
 from tfx import proto
 from tfx.orchestration.kubeflow.v2 import kubeflow_v2_dag_runner as runner
+from tfx.proto import pusher_pb2
+from tfx.proto import trainer_pb2
 
 from pipeline import configs
 from pipeline import pipeline
@@ -28,10 +30,10 @@ def run():
             "preprocessing_fn": configs.PREPROCESSING_FN,
             "training_fn": configs.TRAINING_FN,
           },
-          train_args=proto.TrainArgs(
+          train_args=trainer_pb2.TrainArgs(
             num_steps=configs.TRAIN_NUM_STEPS
           ),
-          eval_args=proto.EvalArgs(
+          eval_args=trainer_pb2.EvalArgs(
             num_steps=configs.EVAL_NUM_STEPS
           ),
           eval_accuracy_threshold=configs.EVAL_ACCURACY_THRESHOLD,
