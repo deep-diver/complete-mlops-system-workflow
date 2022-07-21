@@ -26,8 +26,11 @@ from tfx.proto import trainer_pb2
 from tfx.types import Channel
 from tfx.types.standard_artifacts import Model
 from tfx.types.standard_artifacts import ModelBlessing
+from tfx.orchestration.data_types import RuntimeParameter
 
 def create_pipeline(
+    input_config: RuntimeParameter,
+    output_config: RuntimeParameter,
     pipeline_name: Text,
     pipeline_root: Text,
     data_path: Text,
@@ -41,11 +44,11 @@ def create_pipeline(
 ) -> tfx.dsl.Pipeline:
     components = []
 
-    input_config = example_gen_pb2.Input(splits=[
-        example_gen_pb2.Input.Split(name='train', pattern='train/*'),
-        example_gen_pb2.Input.Split(name='eval', pattern='test/*')
-    ])
-    example_gen = ImportExampleGen(input_base=data_path, input_config=input_config)
+    example_gen = ImportExampleGen(
+        input_base=data_path,
+        input_config=input_config,
+        output_config=output_config
+    )    
     components.append(example_gen)
 
     statistics_gen = StatisticsGen(
@@ -93,12 +96,7 @@ def create_pipeline(
     # Uses TFMA to compute evaluation statistics over features of a model and
     # perform quality validation of a candidate model (compare to a baseline).
     eval_config = tfma.EvalConfig(
-        model_specs=[tfma.ModelSpec(
-            model_type='tf_keras',
-            label_key='label_xf',
-            prediction_key='label_xf',
-            signature_name='serving_default'
-        )],
+        model_specs=[tfma.ModelSpec(label_key='label_xf', prediction_key='label_xf')],
         slicing_specs=[tfma.SlicingSpec()],
         metrics_specs=[
             tfma.MetricsSpec(metrics=[

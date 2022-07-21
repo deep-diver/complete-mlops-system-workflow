@@ -1,4 +1,6 @@
 tfx_metadata/**
 tfx_pipeline_output/**
+pipeline/tfx_metadata/**
+pipeline/tfx_pipeline_output/**
 
 **/*.pyc
