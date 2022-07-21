@@ -48,7 +48,7 @@ def run():
           preprocessing_fn=configs.PREPROCESSING_FN,
           run_fn=configs.RUN_FN,
           train_args=tfx.proto.TrainArgs(num_steps=configs.TRAIN_NUM_STEPS),
-          train_cloud_region='us-central1-a',
+          train_cloud_region='us-central1',
           train_cloud_args=configs.TRAINING_JOB_SPEC,
           eval_args=tfx.proto.EvalArgs(num_steps=configs.EVAL_NUM_STEPS),
           eval_accuracy_threshold=configs.EVAL_ACCURACY_THRESHOLD,
