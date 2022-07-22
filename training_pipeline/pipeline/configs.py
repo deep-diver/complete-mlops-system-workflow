@@ -21,6 +21,7 @@ PIPELINE_IMAGE = f'gcr.io/{GOOGLE_CLOUD_PROJECT}/{PIPELINE_NAME}'
 
 PREPROCESSING_FN = 'models.preprocessing.preprocessing_fn'
 TRAINING_FN = 'models.model.run_fn'
+TUNER_FN = 'models.model.tuner_fn'
 
 TRAIN_NUM_STEPS = 160
 EVAL_NUM_STEPS = 4
