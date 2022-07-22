@@ -45,7 +45,7 @@ def create_pipeline(
     modules: Dict[Text, Text],
     train_args: trainer_pb2.TrainArgs,
     eval_args: trainer_pb2.EvalArgs,
-    tuner_args: tuner_pb2.TunerArgs,
+    tuner_args: tuner_pb2.TuneArgs,
     metadata_connection_config: Optional[metadata_store_pb2.ConnectionConfig] = None,
     ai_platform_training_args: Optional[Dict[Text, Text]] = None,
     ai_platform_tuner_args: Optional[Dict[Text, Text]] = None,
@@ -79,7 +79,7 @@ def create_pipeline(
     components.append(transform)
 
     tuner = VertexTuner(
-        module_file=modules["cloud_tuner_fn"],
+        tuner_fn=modules["cloud_tuner_fn"],
         examples=transform.outputs["transformed_examples"],
         transform_graph=transform.outputs["transform_graph"],
         train_args=train_args,

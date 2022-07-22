@@ -74,7 +74,7 @@ def run():
             },
             train_args=trainer_pb2.TrainArgs(num_steps=configs.TRAIN_NUM_STEPS),
             eval_args=trainer_pb2.EvalArgs(num_steps=configs.EVAL_NUM_STEPS),
-            tuner_args=tuner_pb2.TunerArgs(
+            tuner_args=tuner_pb2.TuneArgs(
                 num_parallel_trials=configs.NUM_PARALLEL_TRIALS
             ),
             ai_platform_training_args=configs.GCP_AI_PLATFORM_TRAINING_ARGS,
