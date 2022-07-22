@@ -15,6 +15,7 @@ from tfx.components import Pusher
 from tfx.components import SchemaGen
 from tfx.components import StatisticsGen
 from tfx.components import Trainer
+from tfx.components import Tuner
 from tfx.extensions.google_cloud_ai_platform.trainer.component import Trainer as VertexTrainer
 from tfx.extensions.google_cloud_ai_platform.pusher.component import Pusher as VertexPusher
 from tfx.components import Transform
@@ -70,20 +71,26 @@ def create_pipeline(
         preprocessing_fn=modules["preprocessing_fn"])
     components.append(transform)
 
+    tuner = Tuner(
+        tuner_fn=modules["training_fn"],
+        examples=transform.outputs['transformed_examples'],
+        schema=schema_gen.outputs['schema'],
+        transform_graph=transform.outputs['transform_graph'],
+        train_args=train_args,
+        eval_args=eval_args)
+    components.append(tuner)
+
     trainer_args = {
         'run_fn': modules["training_fn"],
         'transformed_examples': transform.outputs['transformed_examples'],
         'schema': schema_gen.outputs['schema'],
+        'hyperparameters': tuner.outputs['best_hyperparameters'],
         'transform_graph': transform.outputs['transform_graph'],
         'train_args': train_args,
         'eval_args': eval_args,
+        'custom_config': ai_platform_training_args
     }
-    if ai_platform_training_args:
-        trainer_args["custom_config"] = ai_platform_training_args
-        trainer = VertexTrainer(**trainer_args)
-    else:
-        trainer = Trainer(**trainer_args)
-
+    trainer = VertexTrainer(**trainer_args)
     components.append(trainer)
 
     model_resolver = resolver.Resolver(
@@ -125,15 +132,10 @@ def create_pipeline(
             trainer.outputs['model'],
         'model_blessing':
             evaluator.outputs['blessing'],
+        'custom_config':
+            ai_platform_serving_args
     }
-    if ai_platform_serving_args:
-        pusher_args['custom_config'] = ai_platform_serving_args
-        pusher = VertexPusher(**pusher_args)  # pylint: disable=unused-variable
-    else:
-        pusher_args['push_destination'] = tfx.proto.PushDestination(
-            filesystem=tfx.proto.PushDestination.Filesystem(
-                base_directory=serving_model_dir))
-        pusher = Pusher(**pusher_args)  # pylint: disable=unused-variable
+    pusher = VertexPusher(**pusher_args)  # pylint: disable=unused-variable
     components.append(pusher)
     
     return pipeline.Pipeline(
