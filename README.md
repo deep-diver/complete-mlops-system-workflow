@@ -1,4 +1,4 @@
-[![Lint](https://github.com/deep-diver/complete-mlops-system-workflow/actions/workflows/black.yml/badge.svg)](https://github.com/deep-diver/complete-mlops-system-workflow/actions/workflows/black.yml)
+[![Lint](https://github.com/deep-diver/complete-mlops-system-workflow/actions/workflows/black.yml/badge.svg?branch=main)](https://github.com/deep-diver/complete-mlops-system-workflow/actions/workflows/black.yml)
 
 # Complete MLOps System Workflow with GCP and TFX
 
