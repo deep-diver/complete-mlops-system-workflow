@@ -8,11 +8,11 @@ from components import PerformanceEvaluator
 from components import SpanPreparator
 from components import PipelineTrigger
 
+
 def create_pipeline(
     pipeline_name: Text,
     pipeline_root: Text,
-    metadata_connection_config: Optional[
-        metadata_store_pb2.ConnectionConfig] = None,
+    metadata_connection_config: Optional[metadata_store_pb2.ConnectionConfig] = None,
 ) -> tfx.dsl.Pipeline:
     # Generate a file list for batch preditions.
     # More details on the structure of this file here:

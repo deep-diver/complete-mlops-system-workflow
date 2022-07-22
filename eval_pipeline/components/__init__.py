@@ -6,11 +6,11 @@ from .span_preparator import SpanPreparator
 from .training_pipeline_trigger import PipelineTrigger
 
 __all__ = [
-    'FileListGen',
-    'PerformanceEvaluator',
-    'BatchPredictionGen',
-    'SpanPreparator',
-    'PipelineTrigger'
+    "FileListGen",
+    "PerformanceEvaluator",
+    "BatchPredictionGen",
+    "SpanPreparator",
+    "PipelineTrigger",
 ]
 
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))

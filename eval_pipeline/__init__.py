@@ -1,5 +1,3 @@
 import components
 
-__all__ = [
-    'components'
-]
+__all__ = ["components"]

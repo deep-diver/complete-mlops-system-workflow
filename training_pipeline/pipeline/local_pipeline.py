@@ -16,8 +16,12 @@ from tfx.components import SchemaGen
 from tfx.components import StatisticsGen
 from tfx.components import Trainer
 from tfx.components import Tuner
-from tfx.extensions.google_cloud_ai_platform.trainer.component import Trainer as VertexTrainer
-from tfx.extensions.google_cloud_ai_platform.pusher.component import Pusher as VertexPusher
+from tfx.extensions.google_cloud_ai_platform.trainer.component import (
+    Trainer as VertexTrainer,
+)
+from tfx.extensions.google_cloud_ai_platform.pusher.component import (
+    Pusher as VertexPusher,
+)
 from tfx.components import Transform
 from tfx.dsl.components.common import resolver
 from tfx.dsl.experimental import latest_blessed_model_resolver
@@ -29,6 +33,7 @@ from tfx.types.standard_artifacts import Model
 from tfx.types.standard_artifacts import ModelBlessing
 from tfx.orchestration.data_types import RuntimeParameter
 
+
 def create_pipeline(
     pipeline_name: Text,
     pipeline_root: Text,
@@ -37,53 +42,57 @@ def create_pipeline(
     train_args: trainer_pb2.TrainArgs,
     eval_args: trainer_pb2.EvalArgs,
     serving_model_dir: Text,
-    metadata_connection_config: Optional[metadata_store_pb2.ConnectionConfig] = None
+    metadata_connection_config: Optional[metadata_store_pb2.ConnectionConfig] = None,
 ) -> tfx.dsl.Pipeline:
     components = []
 
-    input_config = example_gen_pb2.Input(splits=[
-        example_gen_pb2.Input.Split(name='train', pattern='train/*.tfrecord'),
-        example_gen_pb2.Input.Split(name='eval', pattern='test/*.tfrecord')
-    ])
+    input_config = example_gen_pb2.Input(
+        splits=[
+            example_gen_pb2.Input.Split(name="train", pattern="train/*.tfrecord"),
+            example_gen_pb2.Input.Split(name="eval", pattern="test/*.tfrecord"),
+        ]
+    )
     example_gen = ImportExampleGen(input_base=data_path, input_config=input_config)
     components.append(example_gen)
 
-    statistics_gen = StatisticsGen(
-        examples=example_gen.outputs['examples'])
+    statistics_gen = StatisticsGen(examples=example_gen.outputs["examples"])
     components.append(statistics_gen)
 
     schema_gen = SchemaGen(
-        statistics=statistics_gen.outputs['statistics'], infer_feature_shape=True)
+        statistics=statistics_gen.outputs["statistics"], infer_feature_shape=True
+    )
     components.append(schema_gen)
 
-    #   example_validator = tfx.components.ExampleValidator(  
+    #   example_validator = tfx.components.ExampleValidator(
     #       statistics=statistics_gen.outputs['statistics'],
     #       schema=schema_gen.outputs['schema'])
     #   components.append(example_validator)
 
-    transform = Transform(  
-        examples=example_gen.outputs['examples'],
-        schema=schema_gen.outputs['schema'],
-        preprocessing_fn=modules["preprocessing_fn"])
+    transform = Transform(
+        examples=example_gen.outputs["examples"],
+        schema=schema_gen.outputs["schema"],
+        preprocessing_fn=modules["preprocessing_fn"],
+    )
     components.append(transform)
 
     tuner = Tuner(
         tuner_fn=modules["tuner_fn"],
-        examples=transform.outputs['transformed_examples'],
-        schema=schema_gen.outputs['schema'],
-        transform_graph=transform.outputs['transform_graph'],
+        examples=transform.outputs["transformed_examples"],
+        schema=schema_gen.outputs["schema"],
+        transform_graph=transform.outputs["transform_graph"],
         train_args=train_args,
-        eval_args=eval_args)
+        eval_args=eval_args,
+    )
     components.append(tuner)
 
     trainer_args = {
-        'run_fn': modules["training_fn"],
-        'transformed_examples': transform.outputs['transformed_examples'],
-        'schema': schema_gen.outputs['schema'],
-        'hyperparameters': tuner.outputs['best_hyperparameters'],
-        'transform_graph': transform.outputs['transform_graph'],
-        'train_args': train_args,
-        'eval_args': eval_args,
+        "run_fn": modules["training_fn"],
+        "transformed_examples": transform.outputs["transformed_examples"],
+        "schema": schema_gen.outputs["schema"],
+        "hyperparameters": tuner.outputs["best_hyperparameters"],
+        "transform_graph": transform.outputs["transform_graph"],
+        "train_args": train_args,
+        "eval_args": eval_args,
     }
     trainer = Trainer(**trainer_args)
     components.append(trainer)
@@ -91,49 +100,57 @@ def create_pipeline(
     model_resolver = resolver.Resolver(
         strategy_class=latest_blessed_model_resolver.LatestBlessedModelResolver,
         model=Channel(type=Model),
-        model_blessing=Channel(
-            type=ModelBlessing)).with_id('latest_blessed_model_resolver')
+        model_blessing=Channel(type=ModelBlessing),
+    ).with_id("latest_blessed_model_resolver")
     components.append(model_resolver)
 
     # Uses TFMA to compute evaluation statistics over features of a model and
     # perform quality validation of a candidate model (compare to a baseline).
     eval_config = tfma.EvalConfig(
-        model_specs=[tfma.ModelSpec(label_key='label_xf', prediction_key='label_xf')],
+        model_specs=[tfma.ModelSpec(label_key="label_xf", prediction_key="label_xf")],
         slicing_specs=[tfma.SlicingSpec()],
         metrics_specs=[
-            tfma.MetricsSpec(metrics=[
-                tfma.MetricConfig(
-                    class_name='SparseCategoricalAccuracy',
-                    threshold=tfma.MetricThreshold(
-                        value_threshold=tfma.GenericValueThreshold(
-                            lower_bound={'value': 0.55}),
-                        # Change threshold will be ignored if there is no
-                        # baseline model resolved from MLMD (first run).
-                        change_threshold=tfma.GenericChangeThreshold(
-                            direction=tfma.MetricDirection.HIGHER_IS_BETTER,
-                            absolute={'value': -1e-3})))
-            ])
-        ])
+            tfma.MetricsSpec(
+                metrics=[
+                    tfma.MetricConfig(
+                        class_name="SparseCategoricalAccuracy",
+                        threshold=tfma.MetricThreshold(
+                            value_threshold=tfma.GenericValueThreshold(
+                                lower_bound={"value": 0.55}
+                            ),
+                            # Change threshold will be ignored if there is no
+                            # baseline model resolved from MLMD (first run).
+                            change_threshold=tfma.GenericChangeThreshold(
+                                direction=tfma.MetricDirection.HIGHER_IS_BETTER,
+                                absolute={"value": -1e-3},
+                            ),
+                        ),
+                    )
+                ]
+            )
+        ],
+    )
 
     evaluator = Evaluator(
-        examples=transform.outputs['transformed_examples'],
-        model=trainer.outputs['model'],
-        baseline_model=model_resolver.outputs['model'],
-        eval_config=eval_config)
+        examples=transform.outputs["transformed_examples"],
+        model=trainer.outputs["model"],
+        baseline_model=model_resolver.outputs["model"],
+        eval_config=eval_config,
+    )
     components.append(evaluator)
 
     pusher_args = {
-        'model':
-            trainer.outputs['model'],
-        'model_blessing':
-            evaluator.outputs['blessing'],
-        'push_destination':
-            tfx.proto.PushDestination(
-            filesystem=tfx.proto.PushDestination.Filesystem(base_directory=serving_model_dir))
+        "model": trainer.outputs["model"],
+        "model_blessing": evaluator.outputs["blessing"],
+        "push_destination": tfx.proto.PushDestination(
+            filesystem=tfx.proto.PushDestination.Filesystem(
+                base_directory=serving_model_dir
+            )
+        ),
     }
     pusher = Pusher(**pusher_args)  # pylint: disable=unused-variable
     components.append(pusher)
-    
+
     return pipeline.Pipeline(
         pipeline_name=pipeline_name,
         pipeline_root=pipeline_root,

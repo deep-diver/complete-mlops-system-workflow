@@ -16,8 +16,12 @@ from tfx.components import SchemaGen
 from tfx.components import StatisticsGen
 from tfx.components import Trainer
 from tfx.components import Tuner
-from tfx.extensions.google_cloud_ai_platform.trainer.component import Trainer as VertexTrainer
-from tfx.extensions.google_cloud_ai_platform.pusher.component import Pusher as VertexPusher
+from tfx.extensions.google_cloud_ai_platform.trainer.component import (
+    Trainer as VertexTrainer,
+)
+from tfx.extensions.google_cloud_ai_platform.pusher.component import (
+    Pusher as VertexPusher,
+)
 from tfx.components import Transform
 from tfx.dsl.components.common import resolver
 from tfx.dsl.experimental import latest_blessed_model_resolver
@@ -28,6 +32,7 @@ from tfx.types import Channel
 from tfx.types.standard_artifacts import Model
 from tfx.types.standard_artifacts import ModelBlessing
 from tfx.orchestration.data_types import RuntimeParameter
+
 
 def create_pipeline(
     input_config: RuntimeParameter,
@@ -46,49 +51,49 @@ def create_pipeline(
     components = []
 
     example_gen = ImportExampleGen(
-        input_base=data_path,
-        input_config=input_config,
-        output_config=output_config
-    )    
+        input_base=data_path, input_config=input_config, output_config=output_config
+    )
     components.append(example_gen)
 
-    statistics_gen = StatisticsGen(
-        examples=example_gen.outputs['examples'])
+    statistics_gen = StatisticsGen(examples=example_gen.outputs["examples"])
     components.append(statistics_gen)
 
     schema_gen = SchemaGen(
-        statistics=statistics_gen.outputs['statistics'], infer_feature_shape=True)
+        statistics=statistics_gen.outputs["statistics"], infer_feature_shape=True
+    )
     components.append(schema_gen)
 
-    #   example_validator = tfx.components.ExampleValidator(  
+    #   example_validator = tfx.components.ExampleValidator(
     #       statistics=statistics_gen.outputs['statistics'],
     #       schema=schema_gen.outputs['schema'])
     #   components.append(example_validator)
 
-    transform = Transform(  
-        examples=example_gen.outputs['examples'],
-        schema=schema_gen.outputs['schema'],
-        preprocessing_fn=modules["preprocessing_fn"])
+    transform = Transform(
+        examples=example_gen.outputs["examples"],
+        schema=schema_gen.outputs["schema"],
+        preprocessing_fn=modules["preprocessing_fn"],
+    )
     components.append(transform)
 
     tuner = Tuner(
         tuner_fn=modules["training_fn"],
-        examples=transform.outputs['transformed_examples'],
-        schema=schema_gen.outputs['schema'],
-        transform_graph=transform.outputs['transform_graph'],
+        examples=transform.outputs["transformed_examples"],
+        schema=schema_gen.outputs["schema"],
+        transform_graph=transform.outputs["transform_graph"],
         train_args=train_args,
-        eval_args=eval_args)
+        eval_args=eval_args,
+    )
     components.append(tuner)
 
     trainer_args = {
-        'run_fn': modules["training_fn"],
-        'transformed_examples': transform.outputs['transformed_examples'],
-        'schema': schema_gen.outputs['schema'],
-        'hyperparameters': tuner.outputs['best_hyperparameters'],
-        'transform_graph': transform.outputs['transform_graph'],
-        'train_args': train_args,
-        'eval_args': eval_args,
-        'custom_config': ai_platform_training_args
+        "run_fn": modules["training_fn"],
+        "transformed_examples": transform.outputs["transformed_examples"],
+        "schema": schema_gen.outputs["schema"],
+        "hyperparameters": tuner.outputs["best_hyperparameters"],
+        "transform_graph": transform.outputs["transform_graph"],
+        "train_args": train_args,
+        "eval_args": eval_args,
+        "custom_config": ai_platform_training_args,
     }
     trainer = VertexTrainer(**trainer_args)
     components.append(trainer)
@@ -96,48 +101,53 @@ def create_pipeline(
     model_resolver = resolver.Resolver(
         strategy_class=latest_blessed_model_resolver.LatestBlessedModelResolver,
         model=Channel(type=Model),
-        model_blessing=Channel(
-            type=ModelBlessing)).with_id('latest_blessed_model_resolver')
+        model_blessing=Channel(type=ModelBlessing),
+    ).with_id("latest_blessed_model_resolver")
     components.append(model_resolver)
 
     # Uses TFMA to compute evaluation statistics over features of a model and
     # perform quality validation of a candidate model (compare to a baseline).
     eval_config = tfma.EvalConfig(
-        model_specs=[tfma.ModelSpec(label_key='label_xf', prediction_key='label_xf')],
+        model_specs=[tfma.ModelSpec(label_key="label_xf", prediction_key="label_xf")],
         slicing_specs=[tfma.SlicingSpec()],
         metrics_specs=[
-            tfma.MetricsSpec(metrics=[
-                tfma.MetricConfig(
-                    class_name='SparseCategoricalAccuracy',
-                    threshold=tfma.MetricThreshold(
-                        value_threshold=tfma.GenericValueThreshold(
-                            lower_bound={'value': 0.55}),
-                        # Change threshold will be ignored if there is no
-                        # baseline model resolved from MLMD (first run).
-                        change_threshold=tfma.GenericChangeThreshold(
-                            direction=tfma.MetricDirection.HIGHER_IS_BETTER,
-                            absolute={'value': -1e-3})))
-            ])
-        ])
+            tfma.MetricsSpec(
+                metrics=[
+                    tfma.MetricConfig(
+                        class_name="SparseCategoricalAccuracy",
+                        threshold=tfma.MetricThreshold(
+                            value_threshold=tfma.GenericValueThreshold(
+                                lower_bound={"value": 0.55}
+                            ),
+                            # Change threshold will be ignored if there is no
+                            # baseline model resolved from MLMD (first run).
+                            change_threshold=tfma.GenericChangeThreshold(
+                                direction=tfma.MetricDirection.HIGHER_IS_BETTER,
+                                absolute={"value": -1e-3},
+                            ),
+                        ),
+                    )
+                ]
+            )
+        ],
+    )
 
     evaluator = Evaluator(
-        examples=transform.outputs['transformed_examples'],
-        model=trainer.outputs['model'],
-        baseline_model=model_resolver.outputs['model'],
-        eval_config=eval_config)
+        examples=transform.outputs["transformed_examples"],
+        model=trainer.outputs["model"],
+        baseline_model=model_resolver.outputs["model"],
+        eval_config=eval_config,
+    )
     components.append(evaluator)
 
     pusher_args = {
-        'model':
-            trainer.outputs['model'],
-        'model_blessing':
-            evaluator.outputs['blessing'],
-        'custom_config':
-            ai_platform_serving_args
+        "model": trainer.outputs["model"],
+        "model_blessing": evaluator.outputs["blessing"],
+        "custom_config": ai_platform_serving_args,
     }
     pusher = VertexPusher(**pusher_args)  # pylint: disable=unused-variable
     components.append(pusher)
-    
+
     return pipeline.Pipeline(
         pipeline_name=pipeline_name,
         pipeline_root=pipeline_root,

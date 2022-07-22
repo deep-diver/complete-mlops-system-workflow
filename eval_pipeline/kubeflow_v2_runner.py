@@ -20,26 +20,28 @@ from pipeline import configs
 from pipeline import pipeline
 from tfx.orchestration.kubeflow.v2 import kubeflow_v2_dag_runner as runner
 
-_OUTPUT_DIR = os.path.join('gs://', configs.GCS_BUCKET_NAME)
-_PIPELINE_ROOT = os.path.join(_OUTPUT_DIR, 'tfx_pipeline_output',
-                              configs.PIPELINE_NAME)
+_OUTPUT_DIR = os.path.join("gs://", configs.GCS_BUCKET_NAME)
+_PIPELINE_ROOT = os.path.join(_OUTPUT_DIR, "tfx_pipeline_output", configs.PIPELINE_NAME)
 
 # _DATA_PATH = 'gs://{}/tfx-template/data/taxi/'.format(configs.GCS_BUCKET_NAME)
 
+
 def run():
-  runner_config = runner.KubeflowV2DagRunnerConfig(
-      default_image=configs.PIPELINE_IMAGE)
-
-  runner.KubeflowV2DagRunner(
-    config=runner_config,
-    output_filename=configs.PIPELINE_NAME+"_pipeline.json",
-  ).run(
-    pipeline.create_pipeline(
-      pipeline_name=configs.PIPELINE_NAME,
-      pipeline_root=_PIPELINE_ROOT,
+    runner_config = runner.KubeflowV2DagRunnerConfig(
+        default_image=configs.PIPELINE_IMAGE
     )
-  )
 
-if __name__ == '__main__':
-  logging.set_verbosity(logging.INFO)
-  run()
+    runner.KubeflowV2DagRunner(
+        config=runner_config,
+        output_filename=configs.PIPELINE_NAME + "_pipeline.json",
+    ).run(
+        pipeline.create_pipeline(
+            pipeline_name=configs.PIPELINE_NAME,
+            pipeline_root=_PIPELINE_ROOT,
+        )
+    )
+
+
+if __name__ == "__main__":
+    logging.set_verbosity(logging.INFO)
+    run()
