@@ -1,10 +1,12 @@
 import os
 from typing import List
 import absl
+import keras_tuner
 import tensorflow as tf
 from tensorflow.keras.optimizers import Adam
 import tensorflow_transform as tft
 
+from tfx.v1.components import TunerFnResult
 from tfx.components.trainer.fn_args_utils import DataAccessor
 from tfx.components.trainer.fn_args_utils import FnArgs
 from tfx.dsl.io import fileio
@@ -67,43 +69,38 @@ def _input_fn(file_pattern: List[str],
               tf_transform_output: tft.TFTransformOutput,
               is_train: bool = False,
               batch_size: int = 200) -> tf.data.Dataset:
+  print()
+  print(file_pattern)
+  print()
   dataset = data_accessor.tf_dataset_factory(
       file_pattern,
       dataset_options.TensorFlowDatasetOptions(
-          batch_size=batch_size, 
+          batch_size=batch_size,
           label_key=_transformed_name(_LABEL_KEY)
       ),
       tf_transform_output.transformed_metadata.schema)
+  print()
+  print(dataset)
+  print()
 
   if is_train:
     dataset = dataset.map(lambda x, y: (_data_augmentation(x), y))
 
   return dataset
 
-def _freeze_model_by_percentage(model: tf.keras.Model, percentage: float):
-  if percentage < 0 or percentage > 1:
-    raise ValueError('Freeze percentage should between 0.0 and 1.0')
+def _get_hyperparameters() -> keras_tuner.HyperParameters:
+  hp = keras_tuner.HyperParameters()
+  hp.Choice('learning_rate', [1e-2, 1e-3], default=1e-3)
+  return hp
 
-  if not model.trainable:
-    raise ValueError(
-        'The model is not trainable, please set model.trainable to True')
-
-  num_layers = len(model.layers)
-  num_layers_to_freeze = int(num_layers * percentage)
-
-  for idx, layer in enumerate(model.layers):
-    if idx < num_layers_to_freeze:
-      layer.trainable = False
-    else:
-      layer.trainable = True
-
-def _build_keras_model() -> tf.keras.Model:
+def _build_keras_model(hparams: keras_tuner.HyperParameters) -> tf.keras.Model:
   base_model = tf.keras.applications.ResNet50(
       input_shape=(224, 224, 3),
       include_top=False,
       weights='imagenet',
       pooling='max')
   base_model.input_spec = None
+  base_model.trainable = False
 
   model = tf.keras.Sequential([
       tf.keras.layers.InputLayer(
@@ -113,21 +110,50 @@ def _build_keras_model() -> tf.keras.Model:
       tf.keras.layers.Dense(10, activation='softmax')
   ])
 
-  return model, base_model
-
-def _compile(model_to_fit: tf.keras.Model, 
-             model_to_freeze: tf.keras.Model, 
-             freeze_percentage: float,
-             learning_rate: float):
-  _freeze_model_by_percentage(model_to_freeze, freeze_percentage)
-
-  model_to_fit.compile(
+  model.compile(
       loss='sparse_categorical_crossentropy',
-      optimizer=Adam(lr=learning_rate),
+      optimizer=Adam(learning_rate=hparams.get('learning_rate')),
       metrics=['sparse_categorical_accuracy'])
-  model_to_fit.summary(print_fn=INFO)  
+  model.summary(print_fn=INFO)  
 
-  return model_to_fit, model_to_freeze
+  return model
+
+def tuner_fn(fn_args: FnArgs) -> TunerFnResult:
+  steps_per_epoch = int(_TRAIN_DATA_SIZE / _TRAIN_BATCH_SIZE)
+
+  tuner = keras_tuner.RandomSearch(
+      _build_keras_model,
+      max_trials=6,
+      hyperparameters=_get_hyperparameters(),
+      allow_new_entries=False,
+      objective=keras_tuner.Objective('val_sparse_categorical_accuracy', 'max'),
+      directory=fn_args.working_dir,
+      project_name='img_classification_tuning')
+
+  tf_transform_output = tft.TFTransformOutput(fn_args.transform_graph_path)
+
+  train_dataset = _input_fn(
+      fn_args.train_files,
+      fn_args.data_accessor,
+      tf_transform_output,
+      is_train=True,
+      batch_size=_TRAIN_BATCH_SIZE)
+
+  eval_dataset = _input_fn(
+      fn_args.eval_files,
+      fn_args.data_accessor,
+      tf_transform_output,
+      is_train=False,
+      batch_size=_EVAL_BATCH_SIZE)
+
+  return TunerFnResult(
+      tuner=tuner,
+      fit_kwargs={
+          'x': train_dataset,
+          'validation_data': eval_dataset,
+          'steps_per_epoch': steps_per_epoch,
+          'validation_steps': fn_args.eval_steps
+      })      
 
 def run_fn(fn_args: FnArgs):
   steps_per_epoch = int(_TRAIN_DATA_SIZE / _TRAIN_BATCH_SIZE)
@@ -155,27 +181,16 @@ def run_fn(fn_args: FnArgs):
   tensorboard_callback = tf.keras.callbacks.TensorBoard(
       log_dir=fn_args.model_run_dir, update_freq='batch')
 
-  model, base_model = _build_keras_model()
-  model, base_model = _compile(model, base_model, 1.0, 
-                               _CLASSIFIER_LEARNING_RATE)
+  if fn_args.hyperparameters:
+    hparams = keras_tuner.HyperParameters.from_config(fn_args.hyperparameters)
+  else:
+    hparams = _get_hyperparameters()
+  INFO(f'HyperParameters for training: ${hparams.get_config()}')
 
-  INFO('Start training the top classifier')
+  model = _build_keras_model(hparams)
   model.fit(
       train_dataset,
       epochs=_CLASSIFIER_EPOCHS,
-      steps_per_epoch=steps_per_epoch,
-      validation_data=eval_dataset,
-      validation_steps=fn_args.eval_steps,
-      callbacks=[tensorboard_callback])
-
-  INFO('Start fine-tuning the model')
-  model, base_model = _compile(model, base_model, 0.9, 
-                               _FINETUNE_LEARNING_RATE)
-
-  model.fit(
-      train_dataset,
-      initial_epoch=_CLASSIFIER_EPOCHS,
-      epochs=total_epochs,
       steps_per_epoch=steps_per_epoch,
       validation_data=eval_dataset,
       validation_steps=fn_args.eval_steps,
