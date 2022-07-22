@@ -7,14 +7,10 @@ from tfx.orchestration.kubeflow.v2 import kubeflow_v2_dag_runner as runner
 from tfx.orchestration.data_types import RuntimeParameter
 from tfx.proto import pusher_pb2
 from tfx.proto import trainer_pb2
+from tfx.proto import tuner_pb2
 
 from pipeline import configs
 from pipeline import pipeline
-
-OUTPUT_DIR = os.path.join("gs://", configs.GCS_BUCKET_NAME)
-PIPELINE_ROOT = os.path.join(OUTPUT_DIR, "tfx_pipeline_output", configs.PIPELINE_NAME)
-SERVING_MODEL_DIR = os.path.join(PIPELINE_ROOT, "serving_model")
-DATA_PATH = "gs://{}/data/".format(configs.GCS_BUCKET_NAME)
 
 """
 RuntimeParameter could be injected with TFX CLI
@@ -69,16 +65,20 @@ def run():
                 ptype=str,
             ),
             pipeline_name=configs.PIPELINE_NAME,
-            pipeline_root=PIPELINE_ROOT,
-            data_path=DATA_PATH,
+            pipeline_root=configs.PIPELINE_ROOT,
+            data_path=configs.DATA_PATH,
             modules={
                 "preprocessing_fn": configs.PREPROCESSING_FN,
                 "training_fn": configs.TRAINING_FN,
+                "cloud_tuner_fn": configs.CLOUD_TUNER_FN,
             },
             train_args=trainer_pb2.TrainArgs(num_steps=configs.TRAIN_NUM_STEPS),
             eval_args=trainer_pb2.EvalArgs(num_steps=configs.EVAL_NUM_STEPS),
-            serving_model_dir=SERVING_MODEL_DIR,
+            tuner_args=tuner_pb2.TunerArgs(
+                num_parallel_trials=configs.NUM_PARALLEL_TRIALS
+            ),
             ai_platform_training_args=configs.GCP_AI_PLATFORM_TRAINING_ARGS,
+            ai_platform_tuner_args=configs.GCP_AI_PLATFORM_TUNER_ARGS,
             ai_platform_serving_args=configs.GCP_AI_PLATFORM_SERVING_ARGS,
         )
     )
