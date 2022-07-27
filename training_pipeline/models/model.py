@@ -1,3 +1,4 @@
+import datetime
 import os
 from typing import List
 import absl
@@ -6,11 +7,15 @@ import tensorflow as tf
 from tensorflow.keras.optimizers import Adam
 import tensorflow_transform as tft
 
+from tensorflow_cloud import CloudTuner
 from tfx.v1.components import TunerFnResult
 from tfx.components.trainer.fn_args_utils import DataAccessor
 from tfx.components.trainer.fn_args_utils import FnArgs
 from tfx.dsl.io import fileio
 from tfx_bsl.tfxio import dataset_options
+import tfx.extensions.google_cloud_ai_platform.constants as vertex_const
+import tfx.extensions.google_cloud_ai_platform.trainer.executor as vertex_training_const
+import tfx.extensions.google_cloud_ai_platform.tuner.executor as vertex_tuner_const
 
 _TRAIN_DATA_SIZE = 128
 _EVAL_DATA_SIZE = 128
@@ -128,6 +133,53 @@ def _build_keras_model(hparams: keras_tuner.HyperParameters) -> tf.keras.Model:
     model.summary(print_fn=INFO)
 
     return model
+
+
+def cloud_tuner_fn(fn_args: FnArgs) -> TunerFnResult:
+    TUNING_ARGS_KEY = vertex_tuner_const.TUNING_ARGS_KEY
+    TRAINING_ARGS_KEY = vertex_training_const.TRAINING_ARGS_KEY
+    VERTEX_PROJECT_KEY = "project"
+    VERTEX_REGION_KEY = vertex_const.VERTEX_REGION_KEY
+
+    tuner = CloudTuner(
+        _build_keras_model,
+        max_trials=6,
+        hyperparameters=_get_hyperparameters(),
+        project_id=fn_args.custom_config[TUNING_ARGS_KEY][TRAINING_ARGS_KEY][
+            VERTEX_PROJECT_KEY
+        ],
+        region=fn_args.custom_config[TUNING_ARGS_KEY][VERTEX_REGION_KEY],
+        objective="val_sparse_categorical_accuracy",
+        directory=fn_args.working_dir,
+    )
+
+    tf_transform_output = tft.TFTransformOutput(fn_args.transform_graph_path)
+
+    train_dataset = _input_fn(
+        fn_args.train_files,
+        fn_args.data_accessor,
+        tf_transform_output,
+        is_train=True,
+        batch_size=_TRAIN_BATCH_SIZE,
+    )
+
+    eval_dataset = _input_fn(
+        fn_args.eval_files,
+        fn_args.data_accessor,
+        tf_transform_output,
+        is_train=False,
+        batch_size=_EVAL_BATCH_SIZE,
+    )
+
+    return TunerFnResult(
+        tuner=tuner,
+        fit_kwargs={
+            "x": train_dataset,
+            "validation_data": eval_dataset,
+            "steps_per_epoch": steps_per_epoch,
+            "validation_steps": fn_args.eval_steps,
+        },
+    )
 
 
 def tuner_fn(fn_args: FnArgs) -> TunerFnResult:
