@@ -27,9 +27,9 @@ steps:
   entrypoint: 'tfx'
   args: ['run', 'create',
           '--engine', 'vertex',
-          '--pipeline-name', '$_PIPELINE_NAME',
-          '--project', '$_PROJECT',
-          '--region', '$_REGION'
+          '--pipeline-name', '${_PIPELINE_NAME}',
+          '--project', '$PROJECT_ID',
+          '--region', '${_REGION}'
         ]
   id: 'Create Pipeline Run'
   waitFor: ['Create Pipeline']  
