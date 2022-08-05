@@ -48,4 +48,5 @@ jobs:
     - name: 'Trigger Cloud Build'
 #       if: steps.training_pipeline_change.outputs.src == 'true'
       run: |
-        gcloud builds submit training_pipeline/ 
+        gcloud builds submit training_pipeline \
+        --config build/pipeline-deployment.yaml 
