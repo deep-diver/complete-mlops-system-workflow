@@ -38,7 +38,7 @@ jobs:
                 
     - name: 'Trigger Cloud Build'
       run: "
-        gcloud builds submit --no-source \
+        gcloud builds submit training_pipeline \
           --quiet \
           --timeout=60m \
           --config=build/trigger-pipeline-deployment.yaml \
