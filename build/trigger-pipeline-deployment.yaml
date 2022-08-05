@@ -24,8 +24,8 @@ steps:
           '--pipeline-name', '${_PIPELINE_NAME}',
           '--project', '$PROJECT_ID',
           '--region', '${_REGION}',
-          '--runtime-parameter', 'output-config="{}"',
-          '--runtime-parameter', 'input-config="{\"splits\": [{\"name\": \"train\", \"pattern\": \"span-[12]/train/*.tfrecord\"}, {\"name\": \"val\", \"pattern\": \"span-[12]/test/*.tfrecord\"}]}"'
+          '--runtime-parameter', 'output-config={}',
+          '--runtime-parameter', 'input-config={"splits": [{"name": "train", "pattern": "span-[12]/train/*.tfrecord"}, {"name": "val", "pattern": "span-[12]/test/*.tfrecord"}]}'
         ]
   id: 'Create Pipeline Run'
   waitFor: ['Create Pipeline']  
