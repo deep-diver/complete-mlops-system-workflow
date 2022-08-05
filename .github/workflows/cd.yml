@@ -44,6 +44,7 @@ jobs:
 #       if: steps.training_pipeline_change.outputs.src == 'true'
       run: |
         gcloud builds submit training_pipeline \
+          --quiet \
           --timeout=60m \
           --config=build/trigger-pipeline-deployment.yaml \
           --substitutions=${{ env.SUBSTITUTIONS }}
