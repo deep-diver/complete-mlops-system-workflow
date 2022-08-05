@@ -49,4 +49,4 @@ jobs:
       run: |
         gcloud builds submit training_pipeline \
         --config build/trigger-pipeline-deployment.yaml \ 
-        --substitutions $SUBSTITUTIONS
+        --substitutions _PROJECT="gcp-ml-172005", _REGION="us-central1", _BRANCH="main", _PIPELINE_NAME="tfx-pipeline"
