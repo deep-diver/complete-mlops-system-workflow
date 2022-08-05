@@ -23,6 +23,8 @@ jobs:
       id-token: 'write'
 
     steps:
+    - uses: actions/checkout@v2.4.2
+    
     - id: 'auth'
       name: 'Authenticate to Google Cloud'
       uses: 'google-github-actions/auth@v0'
@@ -31,10 +33,6 @@ jobs:
         
     - name: 'Set up Cloud SDK'
       uses: 'google-github-actions/setup-gcloud@v0'
-      
-    - name: 'Print Substiution'
-      run: |
-        echo $SUBSTITUTIONS
 
 #     - name: 'Check Changes in the Training Pipeline'
 #       uses: dorny/paths-filter@v2
