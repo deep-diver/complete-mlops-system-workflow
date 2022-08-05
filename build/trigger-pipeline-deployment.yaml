@@ -1,18 +1,10 @@
 steps:
-- name: 'gcr.io/cloud-builders/git'
-  args: ['clone', '--single-branch', '--branch',
-         '$_BRANCH', 'https://github.com/${_USER}/${_REPO}.git',
-         '--depth', '1',
-         '--verbose']
-  id: 'Clone Repository'
-
 - name: 'gcr.io/gcp-ml-172005/tfx:1.9.1'
   entrypoint: 'tfx'
   args: ['pipeline', 'compile',
           '--pipeline-path', 'kubeflow_runner.py',
           '--engine', 'vertex',
         ]
-  dir: '${_REPO}/training_pipeline'
   id: 'Compile Pipeline'
   waitFor: ['Clone Repository']
   
@@ -23,7 +15,6 @@ steps:
           '--engine', 'vertex',
           '--build-image'
         ]
-  dir: '${_REPO}/training_pipeline'        
   id: 'Create Pipeline'
   waitFor: ['Compile Pipeline']  
   
@@ -37,6 +28,5 @@ steps:
           '--runtime-parameter', 'output-config={}',
           '--runtime-parameter', 'input-config={"splits": [{"name": "train", "pattern": "span-${_SPAN}/train/*.tfrecord"}, {"name": "val", "pattern": "span-${_SPAN}/test/*.tfrecord"}]}'
         ]
-  dir: '${_REPO}/training_pipeline'        
   id: 'Create Pipeline Run'
   waitFor: ['Create Pipeline']  
