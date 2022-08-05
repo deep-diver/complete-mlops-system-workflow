@@ -3,10 +3,6 @@ name: Trigger Cloud Build
 on:
   workflow_dispatch:
     inputs:
-      spanPattern:
-        description: 'Span Numbers (regex)'
-        required: true
-        default: '[12]'
       gcpRegion:
         description: 'GCP Region for Vertex AI Pipeline'
         required: true
@@ -15,6 +11,10 @@ on:
         description: 'TFX Pipeline Name to Trigger'
         required: true
         default: 'img-classification'
+      spanPattern:
+        description: 'Span Numbers (regex)'
+        required: true
+        default: '[12]'    
     
 jobs:
   build:
