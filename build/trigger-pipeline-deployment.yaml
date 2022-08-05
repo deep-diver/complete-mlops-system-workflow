@@ -2,3 +2,6 @@ steps:
 - name: python
   entrypoint: python
   args: ["--version"]
+  
+- name: 'bash'
+  args: ['ls']
