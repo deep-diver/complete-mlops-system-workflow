@@ -6,7 +6,6 @@ steps:
           '--engine', 'vertex',
         ]
   id: 'Compile Pipeline'
-  waitFor: ['Clone Repository']
   
 - name: 'gcr.io/gcp-ml-172005/tfx:1.9.1'
   entrypoint: 'tfx'
