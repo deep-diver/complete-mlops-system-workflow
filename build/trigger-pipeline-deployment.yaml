@@ -1,7 +1,35 @@
 steps:
-- name: python
+- name: 'gcr.io/gcp-ml-172005/tfx:1.9.1'
   entrypoint: python
-  args: ["--version"]
+  args: ['-m', 'pytest', '.']
+  id: 'Unit Test'  
+
+- name: 'gcr.io/gcp-ml-172005/tfx:1.9.1'
+  entrypoint: 'tfx'
+  args: ['pipeline', 'compile',
+          '--pipeline-path', 'kubeflow_runner.py',
+          '--engine', 'vertex',
+        ]
+  id: 'Compile Pipeline'
+  waitFor: ['Unit Test']
   
-- name: 'bash'
-  args: ['ls']
+- name: 'gcr.io/gcp-ml-172005/tfx:1.9.1'
+  entrypoint: 'tfx'
+  args: ['pipeline', 'create',
+          '--pipeline-path', 'kubeflow_runner.py',
+          '--engine', 'vertex',
+          '--build-image'
+        ]
+  id: 'Create Pipeline'
+  waitFor: ['Compile Pipeline']  
+  
+- name: 'gcr.io/gcp-ml-172005/tfx:1.9.1'
+  entrypoint: 'tfx'
+  args: ['run', 'create',
+          '--engine', 'vertex',
+          '--pipeline-name', '$_PIPELINE_NAME',
+          '--project', '$_PROJECT',
+          '--region', '$_REGION'
+        ]
+  id: 'Create Pipeline Run'
+  waitFor: ['Create Pipeline']  
