@@ -11,12 +11,11 @@ on:
         description: 'GCP Region for Vertex AI Pipeline'
         required: true
         default: 'us-central1'
-
-env:
-  SUBSTITUTIONS: "\
-    _REGION=\"us-central1\",\
-    _PIPELINE_NAME=\"img-classification\""
-        
+      pipelineName:
+        description: 'TFX Pipeline Name to Trigger'
+        required: true
+        default: 'img-classification'
+    
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -36,20 +35,11 @@ jobs:
         
     - name: 'Set up Cloud SDK'
       uses: 'google-github-actions/setup-gcloud@v0'
-
-#     - name: 'Check Changes in the Training Pipeline'
-#       uses: dorny/paths-filter@v2
-#       id: training_pipeline_change
-#       with:
-#           filters: |
-#               src:
-#                 - 'training_pipeline/**'
                 
     - name: 'Trigger Cloud Build'
-#       if: steps.training_pipeline_change.outputs.src == 'true'
       run: |
         gcloud builds submit training_pipeline \
           --quiet \
           --timeout=60m \
           --config=build/trigger-pipeline-deployment.yaml \
-          --substitutions=${{ env.SUBSTITUTIONS }}
+          --substitutions=_REGION=${{ github.event.inputs.gcpRegion }},_PIPELINE_NAME=${{ github.event.inputs.pipelineName }},_SPAN=${{ github.event.inputs.spanPattern }}
