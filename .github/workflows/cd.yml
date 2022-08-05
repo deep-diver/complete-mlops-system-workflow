@@ -8,11 +8,11 @@ on:
 
 env:
   SUBSTITUTIONS: |
-      "_PROJECT=gcp-ml-172005,
-      _REGION=us-central1,
-      _BRANCH=main,
-      _PIPELINE_NAME=tfx-pipeline
-      "
+      _PROJECT="gcp-ml-172005",
+      _REGION="us-central1",
+      _BRANCH="main",
+      _PIPELINE_NAME="tfx-pipeline"
+      
         
 jobs:
   build:
