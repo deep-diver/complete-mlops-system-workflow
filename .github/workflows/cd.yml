@@ -10,7 +10,6 @@ env:
   SUBSTITUTIONS: |
       "_PROJECT=gcp-ml-172005,
       _REGION=us-central1,
-      _REPO_URL=https://github.com/deep-diver/Model-Training-as-a-CI-CD-System,
       _BRANCH=main,
       _PIPELINE_NAME=tfx-pipeline
       "
@@ -49,4 +48,5 @@ jobs:
 #       if: steps.training_pipeline_change.outputs.src == 'true'
       run: |
         gcloud builds submit training_pipeline \
-        --config build/pipeline-deployment.yaml 
+        --config build/trigger-pipeline-deployment.yaml \ 
+        --substitutions $SUBSTITUTIONS
