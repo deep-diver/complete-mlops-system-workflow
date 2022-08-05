@@ -7,13 +7,13 @@ on:
   workflow_dispatch:
 
 env:
-  SUBSTITUTIONS: "
-            _PROJECT=gcp-ml-172005,\
-            _REGION=us-central1,\
-            _REPO_URL=https://github.com/deep-diver/Model-Training-as-a-CI-CD-System,\
-            _BRANCH=main,\
-            _PIPELINE_NAME=tfx-pipeline
-            "
+  SUBSTITUTIONS: |
+      "_PROJECT=gcp-ml-172005,
+      _REGION=us-central1,
+      _REPO_URL=https://github.com/deep-diver/Model-Training-as-a-CI-CD-System,
+      _BRANCH=main,
+      _PIPELINE_NAME=tfx-pipeline
+      "
         
 jobs:
   build:
@@ -48,7 +48,4 @@ jobs:
     - name: 'Trigger Cloud Build'
 #       if: steps.training_pipeline_change.outputs.src == 'true'
       run: |
-        gcloud builds submit training_pipeline --timeout=60m \ 
-        --config build/pipeline-deployment.yaml \
-        --substitutions $SUBSTITUTIONS \
-        --machine-type=n1-highcpu-8 
+        gcloud builds submit training_pipeline/ 
