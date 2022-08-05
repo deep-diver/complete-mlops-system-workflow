@@ -45,13 +45,14 @@ jobs:
       uses: 'google-github-actions/setup-gcloud@v0'
                 
     - name: 'Trigger Cloud Build'
-      run: |
+      run: "
         gcloud builds submit --no-source \
           --quiet \
           --timeout=60m \
           --config=build/trigger-pipeline-deployment.yaml \
-          --substitutions=_REPO="${{ github.event.inputs.repository }}",\
-          _BRANCH=${{ github.event.inputs.branch }},\
-          _REGION=${{ github.event.inputs.gcpRegion }},\
-          _PIPELINE_NAME=${{ github.event.inputs.pipelineName }},\
-          _SPAN=${{ github.event.inputs.spanPattern }}
+          --substitutions=_REPO=${{ github.event.inputs.repository }},\
+                          _BRANCH=${{ github.event.inputs.branch }},\
+                          _REGION=${{ github.event.inputs.gcpRegion }},\
+                          _PIPELINE_NAME=${{ github.event.inputs.pipelineName }},\
+                          _SPAN=${{ github.event.inputs.spanPattern }}
+          "
