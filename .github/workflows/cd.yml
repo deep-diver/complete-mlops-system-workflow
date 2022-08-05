@@ -3,10 +3,14 @@ name: Trigger Cloud Build
 on:
   workflow_dispatch:
     inputs:
+      githubUser:
+        description: 'GitHub Username'
+        required: true
+        default: 'deep-diver'
       repository:
         description: 'Repository for the pipeline'
         required: true
-        default: 'https://github.com/deep-diver/complete-mlops-system-workflow.git'
+        default: 'complete-mlops-system-workflow'
       branch:
         description: 'Repository for the pipeline'
         required: true
@@ -50,7 +54,8 @@ jobs:
           --quiet \
           --timeout=60m \
           --config=build/trigger-pipeline-deployment.yaml \
-          --substitutions=_REPO=${{ github.event.inputs.repository }},\
+          --substitutions=_USER=${{ github.event.inputs.githubUser }},\
+                          _REPO=${{ github.event.inputs.repository }},\
                           _BRANCH=${{ github.event.inputs.branch }},\
                           _REGION=${{ github.event.inputs.gcpRegion }},\
                           _PIPELINE_NAME=${{ github.event.inputs.pipelineName }},\
