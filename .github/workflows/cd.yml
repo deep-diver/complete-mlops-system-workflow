@@ -23,8 +23,6 @@ jobs:
       id-token: 'write'
 
     steps:
-    - uses: 'actions/checkout@v3'
-
     - id: 'auth'
       name: 'Authenticate to Google Cloud'
       uses: 'google-github-actions/auth@v0'
@@ -46,10 +44,12 @@ jobs:
 #               src:
 #                 - 'training_pipeline/**'
                 
-#     - name: 'Trigger Cloud Build'
+    - name: 'Trigger Cloud Build'
 #       if: steps.training_pipeline_change.outputs.src == 'true'
-#       run: |
-#         gcloud builds submit --no-source --timeout=60m \
-#         --config build/pipeline-deployment.yaml \
-#         --substitutions $SUBSTITUTIONS \
-#         --machine-type=n1-highcpu-8                
+      run: |+
+        gcloud builds submit 
+        --no-source 
+        --timeout=60m 
+        --config build/pipeline-deployment.yaml 
+        --substitutions $SUBSTITUTIONS 
+        --machine-type=n1-highcpu-8
