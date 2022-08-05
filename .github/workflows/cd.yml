@@ -47,9 +47,8 @@ jobs:
     - name: 'Trigger Cloud Build'
 #       if: steps.training_pipeline_change.outputs.src == 'true'
       run: |
-        gcloud builds submit \
-        --no-source \
+        gcloud builds submit --no-source \
         --timeout=60m \ 
         --config build/pipeline-deployment.yaml \
         --substitutions $SUBSTITUTIONS \
-        --machine-type=n1-highcpu-8 \
+        --machine-type=n1-highcpu-8 
