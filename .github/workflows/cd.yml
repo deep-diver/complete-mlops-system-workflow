@@ -3,6 +3,10 @@ name: Trigger Cloud Build
 on:
   workflow_dispatch:
     inputs:
+      repository:
+        description: 'Repository for the pipeline'
+        required: true
+        default: 'https://github.com/deep-diver/complete-mlops-system-workflow.git'
       gcpRegion:
         description: 'GCP Region for Vertex AI Pipeline'
         required: true
@@ -38,8 +42,11 @@ jobs:
                 
     - name: 'Trigger Cloud Build'
       run: |
-        gcloud builds submit training_pipeline \
+        gcloud builds submit --no-source \
           --quiet \
           --timeout=60m \
           --config=build/trigger-pipeline-deployment.yaml \
-          --substitutions=_REGION=${{ github.event.inputs.gcpRegion }},_PIPELINE_NAME=${{ github.event.inputs.pipelineName }},_SPAN=${{ github.event.inputs.spanPattern }}
+          --substitutions=_REPO=${{ github.event.inputs.repository }},\
+                          _REGION=${{ github.event.inputs.gcpRegion }},\
+                          _PIPELINE_NAME=${{ github.event.inputs.pipelineName }},\
+                          _SPAN=${{ github.event.inputs.spanPattern }}
