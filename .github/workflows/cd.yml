@@ -5,7 +5,15 @@ on:
     branches: [ main ]
 
   workflow_dispatch:
-  
+
+env:
+  SUBSTITUTIONS: | 
+    _PROJECT=gcp-ml-172005,\
+    _REGION=us-central1,\
+    _REPO_URL=https://github.com/deep-diver/complete-mlops-system-workflow,\
+    _BRANCH=main,\
+    _PIPELINE_NAME=tfx-pipeline
+        
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -25,6 +33,23 @@ jobs:
         
     - name: 'Set up Cloud SDK'
       uses: 'google-github-actions/setup-gcloud@v0'
+      
+    - name: 'Print Substiution'
+      run: |
+        echo $SUBSTITUTIONS
 
-    - name: 'Use gcloud CLI'
-      run: 'gcloud info'
+#     - name: 'Check Changes in the Training Pipeline'
+#       uses: dorny/paths-filter@v2
+#       id: training_pipeline_change
+#       with:
+#           filters: |
+#               src:
+#                 - 'training_pipeline/**'
+                
+#     - name: 'Trigger Cloud Build'
+#       if: steps.training_pipeline_change.outputs.src == 'true'
+#       run: |
+#         gcloud builds submit --no-source --timeout=60m \
+#         --config build/pipeline-deployment.yaml \
+#         --substitutions $SUBSTITUTIONS \
+#         --machine-type=n1-highcpu-8                
