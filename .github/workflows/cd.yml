@@ -7,10 +7,10 @@ on:
   workflow_dispatch:
 
 env:
-  SUBSTITUTIONS: " 
-    PROJECT_ID=\"gcp-ml-172005\",
-    _REGION=\"us-central1\",
-    _PIPELINE_NAME=\"img-classification\"
+  SUBSTITUTIONS: >- 
+    PROJECT_ID="gcp-ml-172005",
+    _REGION="us-central1",
+    _PIPELINE_NAME="img-classification"
     "
       
         
