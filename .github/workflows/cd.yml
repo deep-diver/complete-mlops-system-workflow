@@ -7,10 +7,9 @@ on:
   workflow_dispatch:
 
 env:
-  SUBSTITUTIONS: "
-      _REGION=us-central1,\
-      _PIPELINE_NAME=img-classification
-      "
+  SUBSTITUTIONS: "_REGION=us-central1,\
+                  _PIPELINE_NAME=img-classification
+                  "
       
         
 jobs:
