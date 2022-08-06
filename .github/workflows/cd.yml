@@ -1,4 +1,4 @@
-name: Trigger Cloud Build
+name: Trigger Training Pipeline
 
 on:
   workflow_dispatch:
