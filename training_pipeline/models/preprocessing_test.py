@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from models import preprocessing
+from training_pipeline.models import preprocessing
 
 
 class PreprocessingTest(tf.test.TestCase):
