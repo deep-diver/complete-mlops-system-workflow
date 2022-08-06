@@ -3,6 +3,10 @@ name: Trigger Cloud Build
 on:
   workflow_dispatch:
     inputs:
+      gcpProject:
+        description: 'GCP Project for Vertex AI Pipeline'
+        required: true
+        default: 'gcp-ml-172005'
       gcpRegion:
         description: 'GCP Region for Vertex AI Pipeline'
         required: true
@@ -27,8 +31,15 @@ jobs:
     steps:
     - uses: actions/checkout@v2.4.2
     
-    - id: 'auth'
-      name: 'Authenticate to Google Cloud'
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.8'
+        
+    - name: 'Install required Python packages'
+      run: |
+        pip install -r requirements.txt
+    
+    - name: 'Authenticate to Google Cloud'
       uses: 'google-github-actions/auth@v0'
       with:
         credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
@@ -36,13 +47,30 @@ jobs:
     - name: 'Set up Cloud SDK'
       uses: 'google-github-actions/setup-gcloud@v0'
                 
-    - name: 'Trigger Cloud Build'
-      run: "
-        gcloud builds submit training_pipeline \
-          --quiet \
-          --timeout=60m \
-          --config=build/trigger-pipeline-deployment.yaml \
-          --substitutions=_REGION=${{ github.event.inputs.gcpRegion }},\
-                          _PIPELINE_NAME=${{ github.event.inputs.pipelineName }},\
-                          _SPAN=${{ github.event.inputs.spanPattern }}
-          "
+    - name: 'Compile TFX Training Pipeline'
+      working-directory: 'training_pipeline'
+      run: |
+        tfx pipeline compile \
+          --pipeline-path kubeflow_runner.py \
+          --engine vertex
+          
+    - name: 'Create TFX Training Pipeline'
+      working-directory: 'training_pipeline'
+      run: |
+        tfx pipeline create \
+          --pipeline-path kubeflow_runner.py \
+          --engine vertex \
+          --build-image
+          
+    - name: 'Run TFX Training Pipeline'
+      working-directory: 'training_pipeline'
+      run: |
+          tfx run create \
+            --engine vertex \
+            --pipeline-name ${{ github.event.inputs.pipelineName }} \
+            --project ${{ github.event.inputs.gcpProject }} \
+            --region ${{ github.event.inputs.gcpRegion }} \
+            --runtime-parameter 'output-config={}' \
+            --runtime-parameter 'input-config={"splits": [{"name": "train", "pattern": "span-${{ github.event.inputs.spanPattern }}/train/*.tfrecord"}, {"name": "eval", "pattern": "span-${{ github.event.inputs.spanPattern }}/test/*.tfrecord"}]}'
+            
+    
