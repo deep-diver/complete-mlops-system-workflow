@@ -75,7 +75,7 @@ GCP_AI_PLATFORM_TUNER_ARGS = {
         #         'type': 'NVIDIA_TESLA_K80',
         #     },
         # },
-        # 'serviceAccount': 'vizier@gcp-ml-172005.iam.gserviceaccount.com', 
+        # 'serviceAccount': 'vizier@gcp-ml-172005.iam.gserviceaccount.com',
     },
     vertex_tuner_const.REMOTE_TRIALS_WORKING_DIR_KEY: os.path.join(
         PIPELINE_ROOT, "trials"
