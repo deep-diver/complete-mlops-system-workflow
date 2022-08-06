@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from models import model
+from training_pipeline.models import model
 
 
 class ModelTest(tf.test.TestCase):
