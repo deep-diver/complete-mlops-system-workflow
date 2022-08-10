@@ -21,7 +21,7 @@ on:
         default: '[12]'    
     
 jobs:
-  build:
+  cd:
     runs-on: ubuntu-latest
   
     permissions:
