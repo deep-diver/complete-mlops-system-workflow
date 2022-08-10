@@ -66,7 +66,15 @@ GCP_AI_PLATFORM_TUNER_ARGS = {
         "scaleTier": "CUSTOM",
         "masterType": "n1-standard-4",
         "masterConfig": {
-            "imageUri": PIPELINE_IMAGE,
+            # "imageUri": PIPELINE_IMAGE,
+            "acceleratorConfig": {
+                "count": 1,
+                "type": "NVIDIA_TESLA_K80",
+            },
+        },
+        "workerType": "n1-standard-4",
+        "workerCount": 3,
+        "workerConfig": {
             "acceleratorConfig": {
                 "count": 1,
                 "type": "NVIDIA_TESLA_K80",
