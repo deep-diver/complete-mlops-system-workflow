@@ -64,9 +64,9 @@ GCP_AI_PLATFORM_TUNER_ARGS = {
         "project": GOOGLE_CLOUD_PROJECT,
         "region": "us-central1",
         "scaleTier": "STANDARD_1",
-        "masterConfig": {
-            "imageUri": PIPELINE_IMAGE,
-        },
+        #"masterConfig": {
+        #    "imageUri": PIPELINE_IMAGE,
+        #},
         # 'materType': 'n1-standard-4'
         # 'masterConfig': {
         #     'imageUri': PIPELINE_IMAGE,
