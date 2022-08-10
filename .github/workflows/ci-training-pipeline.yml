@@ -1,6 +1,11 @@
 name: Validity Check for Training Pipeline
 
-on: [pull_request]
+on:
+  push:
+    branches:
+      - main
+      
+  pull_request:      
 
 jobs:
   ci:
