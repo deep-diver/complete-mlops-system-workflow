@@ -64,17 +64,14 @@ GCP_AI_PLATFORM_TUNER_ARGS = {
         "project": GOOGLE_CLOUD_PROJECT,
         "region": "us-central1",
         "scaleTier": "STANDARD_1",
-        #"masterConfig": {
-        #    "imageUri": PIPELINE_IMAGE,
-        #},
-        # 'materType': 'n1-standard-4'
-        # 'masterConfig': {
-        #     'imageUri': PIPELINE_IMAGE,
-        #     'acceleratorConfig' : {
-        #         'count': 1,
-        #         'type': 'NVIDIA_TESLA_K80',
-        #     },
-        # },
+        "masterType": 'n1-standard-4'
+        "masterConfig": {
+            "imageUri": PIPELINE_IMAGE,
+            "acceleratorConfig" : {
+                'count': 1,
+                'type': 'NVIDIA_TESLA_K80',
+            },
+        },
         # 'serviceAccount': 'vizier@gcp-ml-172005.iam.gserviceaccount.com',
     },
     vertex_tuner_const.REMOTE_TRIALS_WORKING_DIR_KEY: os.path.join(
