@@ -50,7 +50,7 @@ jobs:
       env:
         GCP_SECRET_KEY: ${{ steps.prepare-step.outputs.GCP_SECRET_KEY }}
       with:
-        credentials_json: '${{ secrets[$GCP_SECRET_KEY] }}'
+        credentials_json: '${{ secrets[env.GCP_SECRET_KEY] }}'
         
     - name: 'Set up Cloud SDK'
       uses: 'google-github-actions/setup-gcloud@v0'
