@@ -64,12 +64,12 @@ GCP_AI_PLATFORM_TUNER_ARGS = {
         "project": GOOGLE_CLOUD_PROJECT,
         "region": "us-central1",
         "scaleTier": "STANDARD_1",
-        "masterType": 'n1-standard-4'
+        "masterType": "n1-standard-4,
         "masterConfig": {
             "imageUri": PIPELINE_IMAGE,
             "acceleratorConfig" : {
-                'count': 1,
-                'type': 'NVIDIA_TESLA_K80',
+                "count": 1,
+                "type": "NVIDIA_TESLA_K80",
             },
         },
         # 'serviceAccount': 'vizier@gcp-ml-172005.iam.gserviceaccount.com',
