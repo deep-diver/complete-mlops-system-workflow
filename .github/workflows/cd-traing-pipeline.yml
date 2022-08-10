@@ -39,6 +39,16 @@ jobs:
       run: |
         pip install -r requirements.txt
     
+    - name: 'Replace GCP Project Strings'
+      id: 'prepare-step'
+      run: |
+        a=`echo ${{ github.event.inputs.gcpProject }} | sed -e "s/-/_/g"`
+        echo "::set-output name=GCP_SECRET_KEY::$a"
+        
+    - name: 'Test'
+      run: |
+        echo ${{ prepare-step.outputs.GCP_SECRET_KEY }}
+    
     - name: 'Authenticate to Google Cloud'
       uses: 'google-github-actions/auth@v0'
       with:
