@@ -5,6 +5,7 @@ from github import Github
 
 from components.pusher.GHReleasePusher import constants
 
+
 def release_model_for_github(
     model_path: str,
     model_version_name: str,

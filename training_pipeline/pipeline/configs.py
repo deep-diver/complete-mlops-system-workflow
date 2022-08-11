@@ -101,5 +101,5 @@ GH_RELEASE_ARGS = {
         "REPONAME": "PyGithubTest",
         "BRANCH": "main",
         "ASSETNAME": "saved_model.tar.gz",
-    }    
+    }
 }
