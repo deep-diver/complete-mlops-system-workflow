@@ -3,21 +3,22 @@ from typing import Any, Dict
 import tarfile
 from github import Github
 
+from components.pusher.GHReleasePusher import constants
 
 def release_model_for_github(
     model_path: str,
     model_version_name: str,
     gh_release_args: Dict[str, Any],
 ) -> str:
-    access_token = gh_release_args["ACCESS_TOKEN"]
+    access_token = gh_release_args[constants.ACCESS_TOKEN_KEY]
 
-    username = gh_release_args["USERNAME"]
-    reponame = gh_release_args["REPONAME"]
+    username = gh_release_args[constants.USERNAME_KEY]
+    reponame = gh_release_args[constants.REPONAME_KEY]
     repo_uri = f"{username}/{reponame}"
 
-    branch_name = gh_release_args["BRANCH"]
+    branch_name = gh_release_args[constants.BRANCH_KEY]
 
-    model_archive = gh_release_args["ASSETNAME"]
+    model_archive = gh_release_args[constants.ASSETNAME_KEY]
 
     gh = Github(access_token)
     repo = gh.get_repo(repo_uri)

@@ -7,6 +7,7 @@ from unittest import mock
 import tensorflow as tf
 from tfx.dsl.io import fileio
 from components.pusher.GHReleasePusher import executor
+from components.pusher.GHReleasePusher import constants
 from tfx.types import standard_artifacts
 from tfx.types import standard_component_specs
 from tfx.utils import json_utils
@@ -49,7 +50,7 @@ class ExecutorTest(tf.test.TestCase):
         # before being passed into Do function.
         self._exec_properties = {
             "custom_config": {
-                _GH_RELEASE_KEY: {
+                constants.GH_RELEASE_KEY: {
                     "ACCESS_TOKEN": "...",
                     "USERNAME": "deep-diver",
                     "REPONAME": "PyGithubTest",

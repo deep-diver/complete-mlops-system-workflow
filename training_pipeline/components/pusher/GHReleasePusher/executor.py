@@ -5,7 +5,7 @@ from google.api_core import client_options
 from googleapiclient import discovery
 from tfx import types
 from tfx.components.pusher import executor as tfx_pusher_executor
-from tfx.extensions.google_cloud_ai_platform import constants
+from components.pusher.GHReleasePusher import constants
 from components.pusher.GHReleasePusher import runner
 from tfx.types import artifact_utils
 from tfx.types import standard_component_specs
@@ -20,7 +20,6 @@ from tfx.dsl.io import fileio
 
 # Keys for custom_config.
 _CUSTOM_CONFIG_KEY = "custom_config"
-_GH_RELEASE_KEY = "GH_RELEASE"
 
 
 class Executor(tfx_pusher_executor.Executor):
@@ -65,7 +64,7 @@ class Executor(tfx_pusher_executor.Executor):
                 "custom_config in execution properties needs to be a dict."
             )
 
-        gh_release_args = custom_config.get(_GH_RELEASE_KEY)
+        gh_release_args = custom_config.get(constants.GH_RELEASE_KEY)
         if not gh_release_args:
             raise ValueError("'GH_RELEASE' is missing in 'custom_config'")
         model_push = artifact_utils.get_single_instance(
