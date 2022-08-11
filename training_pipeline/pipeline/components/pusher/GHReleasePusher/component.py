@@ -3,7 +3,7 @@ from typing import Any, Dict, Optional
 from tfx import types
 from tfx.components.pusher import component as pusher_component
 from tfx.dsl.components.base import executor_spec
-from components.pusher.GHReleasePusher import executor
+from pipeline.components.pusher.GHReleasePusher import executor
 
 
 class Pusher(pusher_component.Pusher):

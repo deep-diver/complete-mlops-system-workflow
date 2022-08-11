@@ -5,8 +5,8 @@ from google.api_core import client_options
 from googleapiclient import discovery
 from tfx import types
 from tfx.components.pusher import executor as tfx_pusher_executor
-from components.pusher.GHReleasePusher import constants
-from components.pusher.GHReleasePusher import runner
+from pipeline.components.pusher.GHReleasePusher import constants
+from pipeline.components.pusher.GHReleasePusher import runner
 from tfx.types import artifact_utils
 from tfx.types import standard_component_specs
 from tfx.utils import deprecation_utils

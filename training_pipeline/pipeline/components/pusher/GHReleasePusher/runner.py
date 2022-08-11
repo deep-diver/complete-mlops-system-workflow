@@ -3,7 +3,7 @@ from typing import Any, Dict
 import tarfile
 from github import Github
 
-from components.pusher.GHReleasePusher import constants
+from pipeline.components.pusher.GHReleasePusher import constants
 
 
 def release_model_for_github(

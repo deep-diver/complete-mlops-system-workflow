@@ -23,7 +23,7 @@ from tfx.extensions.google_cloud_ai_platform.pusher.component import (
     Pusher as VertexPusher,
 )
 from tfx.extensions.google_cloud_ai_platform.tuner.component import Tuner as VertexTuner
-from components.pusher.GHReleasePusher.component import Pusher as GHPusher
+from pipeline.components.pusher.GHReleasePusher.component import Pusher as GHPusher
 from tfx.components import Transform
 from tfx.dsl.components.common import resolver
 from tfx.dsl.experimental import latest_blessed_model_resolver
