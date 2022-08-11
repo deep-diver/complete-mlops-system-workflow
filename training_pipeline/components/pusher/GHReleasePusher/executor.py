@@ -6,7 +6,7 @@ from googleapiclient import discovery
 from tfx import types
 from tfx.components.pusher import executor as tfx_pusher_executor
 from tfx.extensions.google_cloud_ai_platform import constants
-from tfx.extensions.google_cloud_ai_platform import runner
+from training_pipeline.components.pusher.GHReleasePusher import runner
 from tfx.types import artifact_utils
 from tfx.types import standard_component_specs
 from tfx.utils import deprecation_utils
@@ -14,6 +14,9 @@ from tfx.utils import io_utils
 from tfx.utils import json_utils
 from tfx.utils import name_utils
 from tfx.utils import telemetry_utils
+
+
+from tfx.dsl.io import fileio
 
 # Keys for custom_config.
 _CUSTOM_CONFIG_KEY = "custom_config"
@@ -65,7 +68,7 @@ class Executor(tfx_pusher_executor.Executor):
 
         gh_release_args = custom_config.get(_GH_RELEASE_KEY)
         if not gh_release_args:
-            raise ValueError("'gh_release_args' is missing in 'custom_config'")
+            raise ValueError("'GH_RELEASE' is missing in 'custom_config'")
         model_push = artifact_utils.get_single_instance(
             output_dict[standard_component_specs.PUSHED_MODEL_KEY]
         )
@@ -82,3 +85,6 @@ class Executor(tfx_pusher_executor.Executor):
             {telemetry_utils.LABEL_TFX_EXECUTOR: executor_class_path}
         ):
             job_labels = telemetry_utils.make_labels_dict()
+
+        pushed_model_path = runner.release_model_for_github(gh_release_args)
+        self._MarkPushed(model_push, pushed_destination=pushed_model_path)

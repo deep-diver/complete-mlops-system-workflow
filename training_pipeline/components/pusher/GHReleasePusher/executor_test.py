@@ -6,13 +6,14 @@ from unittest import mock
 
 import tensorflow as tf
 from tfx.dsl.io import fileio
-from tfx.extensions.google_cloud_ai_platform import constants
-from tfx.extensions.google_cloud_ai_platform.pusher import executor
+from training_pipeline.components.pusher.GHReleasePusher import executor
 from tfx.types import standard_artifacts
 from tfx.types import standard_component_specs
 from tfx.utils import json_utils
 from tfx.utils import name_utils
 from tfx.utils import telemetry_utils
+
+_GH_RELEASE_KEY = "GH_RELEASE"
 
 
 class ExecutorTest(tf.test.TestCase):
@@ -48,10 +49,12 @@ class ExecutorTest(tf.test.TestCase):
         # before being passed into Do function.
         self._exec_properties = {
             "custom_config": {
-                "USERNAME": "deep-diver",
-                "REPONAME": "PyGithubTest",
-                "ASSETNAME": "saved_model.tar.gz",
-                "TAG": f"v{int(time.time())}",
+                _GH_RELEASE_KEY: {
+                    "USERNAME": "deep-diver",
+                    "REPONAME": "PyGithubTest",
+                    "ASSETNAME": "saved_model.tar.gz",
+                    "TAG": f"v{int(time.time())}",
+                }
             },
             "push_destination": None,
         }
@@ -82,32 +85,43 @@ class ExecutorTest(tf.test.TestCase):
         self._model_blessing.uri = os.path.join(
             self._source_data_dir, "model_validator/blessed"
         )
-        # self._model_blessing.set_int_custom_property("blessed", 1)
-        # mock_runner.get_service_name_and_api_version.return_value = ("ml", "v1")
-        # version = self._model_push.get_string_custom_property("pushed_version")
-        # mock_runner.deploy_model_for_aip_prediction.return_value = (
-        #     "projects/project_id/models/model_name/versions/{}".format(version)
-        # )
+        self._model_blessing.set_int_custom_property("blessed", 1)
+        version = self._model_push.get_string_custom_property("pushed_version")
+        mock_runner.release_model_for_github.return_value = (
+            f"https://github.com/username/reponame/releases/tag/{version}"
+        )
 
-        # self._executor.Do(
-        #     self._input_dict,
-        #     self._output_dict,
-        #     self._serialize_custom_config_under_test(),
-        # )
-        # executor_class_path = name_utils.get_full_name(self._executor.__class__)
-        # with telemetry_utils.scoped_labels(
-        #     {telemetry_utils.LABEL_TFX_EXECUTOR: executor_class_path}
-        # ):
-        #     job_labels = telemetry_utils.make_labels_dict()
-        # mock_runner.deploy_model_for_aip_prediction.assert_called_once_with(
-        #     serving_path=self._model_push.uri,
-        #     model_version_name=mock.ANY,
-        #     ai_platform_serving_args=mock.ANY,
-        #     api=mock.ANY,
-        #     labels=job_labels,
-        # )
-        # self.assertPushed()
-        # self.assertEqual(
-        #     self._model_push.get_string_custom_property("pushed_destination"),
-        #     "projects/project_id/models/model_name/versions/{}".format(version),
-        # )
+        self._executor.Do(
+            self._input_dict,
+            self._output_dict,
+            self._serialize_custom_config_under_test(),
+        )
+
+        executor_class_path = name_utils.get_full_name(self._executor.__class__)
+        with telemetry_utils.scoped_labels(
+            {telemetry_utils.LABEL_TFX_EXECUTOR: executor_class_path}
+        ):
+            job_labels = telemetry_utils.make_labels_dict()
+
+        mock_runner.release_model_for_github.assert_called_once_with(
+            gh_release_args=mock.ANY,
+        )
+        self.assertPushed()
+        self.assertEqual(
+            self._model_push.get_string_custom_property("pushed_destination"),
+            f"https://github.com/username/reponame/releases/tag/{version}",
+        )
+
+    @mock.patch.object(executor, "runner", autospec=True)
+    def testDoNotBlessed(self, mock_runner):
+        self._model_blessing.uri = os.path.join(
+            self._source_data_dir, "model_validator/not_blessed"
+        )
+        self._model_blessing.set_int_custom_property("blessed", 0)
+        self._executor.Do(
+            self._input_dict,
+            self._output_dict,
+            self._serialize_custom_config_under_test(),
+        )
+        self.assertNotPushed()
+        mock_runner.release_model_for_github.assert_not_called()
