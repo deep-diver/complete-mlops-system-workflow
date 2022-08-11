@@ -42,17 +42,28 @@ jobs:
     - name: 'Replace GCP Project Strings'
       id: prepare-step
       run: |
-        a=`echo ${{ github.event.inputs.gcpProject }} | sed -e "s/-/_/g"`
-        echo "::set-output name=GCP_SECRET_KEY::$a"
+        gcp_key=`echo ${{ github.event.inputs.gcpProject }} | sed -e "s/-/_/g"`
+        echo "::set-output name=GCP_SECRET_KEY::$gcp_key"
         
     - name: 'Authenticate to Google Cloud'
       uses: 'google-github-actions/auth@v0'
+      env:
+        GCP_SECRET_KEY: ${{ steps.prepare-step.outputs.GCP_SECRET_KEY }}
       with:
-        credentials_json: '${{ secrets[${{ steps.prepare-step.outputs.GCP_SECRET_KEY }}] }}'
+        credentials_json: '${{ secrets[env.GCP_SECRET_KEY] }}'
         
     - name: 'Set up Cloud SDK'
       uses: 'google-github-actions/setup-gcloud@v0'
-                
+
+    - name: 'Replace GitHub Access Token Placeholder'
+      working-directory: 'training_pipeline'
+      env: 
+        GH_ACCESS_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
+      run: |
+        envsubst '$GH_ACCESS_TOKEN' < pipeline/configs.py > pipeline/configs_tmp.py
+        mv pipeline/configs_tmp.py pipeline/configs.py
+        cat pipeline/configs.py
+
     - name: 'Compile TFX Training Pipeline'
       working-directory: 'training_pipeline'
       run: |
