@@ -93,3 +93,13 @@ GCP_AI_PLATFORM_SERVING_ARGS = {
         "max_replica_count": 1,
     },
 }
+
+GH_RELEASE_ARGS = {
+    "GH_RELEASE": {
+        "ACCESS_TOKEN": "$GH_ACCESS_TOKEN",
+        "USERNAME": "deep-diver",
+        "REPONAME": "PyGithubTest",
+        "BRANCH": "main",
+        "ASSETNAME": "saved_model.tar.gz",
+    }    
+}

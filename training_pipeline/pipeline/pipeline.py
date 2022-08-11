@@ -23,6 +23,7 @@ from tfx.extensions.google_cloud_ai_platform.pusher.component import (
     Pusher as VertexPusher,
 )
 from tfx.extensions.google_cloud_ai_platform.tuner.component import Tuner as VertexTuner
+from components.pusher.GHReleasePusher.component import Pusher as GHPusher
 from tfx.components import Transform
 from tfx.dsl.components.common import resolver
 from tfx.dsl.experimental import latest_blessed_model_resolver
@@ -50,6 +51,7 @@ def create_pipeline(
     ai_platform_training_args: Optional[Dict[Text, Text]] = None,
     ai_platform_tuner_args: Optional[Dict[Text, Text]] = None,
     ai_platform_serving_args: Optional[Dict[Text, Any]] = None,
+    gh_release_args: Optional[Dict[Text, Any]] = None,
 ) -> tfx.dsl.Pipeline:
     components = []
 
@@ -151,6 +153,10 @@ def create_pipeline(
     }
     pusher = VertexPusher(**pusher_args)  # pylint: disable=unused-variable
     components.append(pusher)
+
+    pusher_args["custom_config"] = gh_release_args
+    gh_pusher = GHPusher(**pusher_args).with_id("gh_release_pusher")
+    components.append(gh_pusher)
 
     return pipeline.Pipeline(
         pipeline_name=pipeline_name,
