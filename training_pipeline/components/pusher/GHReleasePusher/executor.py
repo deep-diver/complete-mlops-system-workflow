@@ -6,7 +6,7 @@ from googleapiclient import discovery
 from tfx import types
 from tfx.components.pusher import executor as tfx_pusher_executor
 from tfx.extensions.google_cloud_ai_platform import constants
-from training_pipeline.components.pusher.GHReleasePusher import runner
+from components.pusher.GHReleasePusher import runner
 from tfx.types import artifact_utils
 from tfx.types import standard_component_specs
 from tfx.utils import deprecation_utils
@@ -47,7 +47,6 @@ class Executor(tfx_pusher_executor.Executor):
                     "USERNAME": "deep-diver",
                     "REPONAME": "PyGithubTest",
                     "ASSETNAME": "saved_model.tar.gz",
-                    "TAG": f'v{int(time.time())}'
                 }
         Raises:
           ValueError:
@@ -86,5 +85,10 @@ class Executor(tfx_pusher_executor.Executor):
         ):
             job_labels = telemetry_utils.make_labels_dict()
 
-        pushed_model_path = runner.release_model_for_github(gh_release_args)
+        model_name = 'v{int(time.time())}'
+        pushed_model_path = runner.release_model_for_github(
+            model_path=model_path,
+            model_version_name=model_name,
+            gh_release_args=gh_release_args
+        )
         self._MarkPushed(model_push, pushed_destination=pushed_model_path)

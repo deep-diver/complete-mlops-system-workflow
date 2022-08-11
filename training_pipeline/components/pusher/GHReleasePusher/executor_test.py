@@ -6,7 +6,7 @@ from unittest import mock
 
 import tensorflow as tf
 from tfx.dsl.io import fileio
-from training_pipeline.components.pusher.GHReleasePusher import executor
+from components.pusher.GHReleasePusher import executor
 from tfx.types import standard_artifacts
 from tfx.types import standard_component_specs
 from tfx.utils import json_utils
@@ -50,10 +50,11 @@ class ExecutorTest(tf.test.TestCase):
         self._exec_properties = {
             "custom_config": {
                 _GH_RELEASE_KEY: {
+                    "ACCESS_TOKEN": "...",
                     "USERNAME": "deep-diver",
                     "REPONAME": "PyGithubTest",
+                    "BRANCH": "main",
                     "ASSETNAME": "saved_model.tar.gz",
-                    "TAG": f"v{int(time.time())}",
                 }
             },
             "push_destination": None,
@@ -104,6 +105,8 @@ class ExecutorTest(tf.test.TestCase):
             job_labels = telemetry_utils.make_labels_dict()
 
         mock_runner.release_model_for_github.assert_called_once_with(
+            model_path=mock.ANY,
+            model_version_name=mock.ANY,
             gh_release_args=mock.ANY,
         )
         self.assertPushed()
