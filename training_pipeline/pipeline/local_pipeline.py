@@ -35,6 +35,7 @@ from tfx.orchestration.data_types import RuntimeParameter
 
 from components.pusher.GHReleasePusher.component import Pusher as GHPusher
 
+
 def create_pipeline(
     pipeline_name: Text,
     pipeline_root: Text,
@@ -157,22 +158,22 @@ def create_pipeline(
         "model_blessing": evaluator.outputs["blessing"],
         "custom_config": {
             "GH_RELEASE": {
-                "ACCESS_TOKEN": "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",
+                "ACCESS_TOKEN": "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",
                 "USERNAME": "deep-diver",
                 "REPONAME": "PyGithubTest",
                 "BRANCH": "main",
                 "ASSETNAME": "saved_model.tar.gz",
             }
-        }
+        },
     }
 
-    gh_pusher = GHPusher(**pusher_args).with_id('gh_release_pusher')
-    # components.append(gh_pusher)
+    gh_pusher = GHPusher(**pusher_args).with_id("gh_release_pusher")
+    components.append(gh_pusher)
 
     return pipeline.Pipeline(
         pipeline_name=pipeline_name,
         pipeline_root=pipeline_root,
         components=components,
-        enable_cache=True,
+        enable_cache=False,
         metadata_connection_config=metadata_connection_config,
     )

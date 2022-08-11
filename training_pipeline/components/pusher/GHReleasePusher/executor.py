@@ -85,10 +85,10 @@ class Executor(tfx_pusher_executor.Executor):
         ):
             job_labels = telemetry_utils.make_labels_dict()
 
-        model_name = 'v{int(time.time())}'
+        model_name = f"v{int(time.time())}"
         pushed_model_path = runner.release_model_for_github(
             model_path=model_path,
             model_version_name=model_name,
-            gh_release_args=gh_release_args
+            gh_release_args=gh_release_args,
         )
         self._MarkPushed(model_push, pushed_destination=pushed_model_path)
