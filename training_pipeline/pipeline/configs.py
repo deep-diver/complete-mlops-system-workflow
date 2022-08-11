@@ -64,10 +64,10 @@ GCP_AI_PLATFORM_TUNER_ARGS = {
         "project": GOOGLE_CLOUD_PROJECT,
         "region": "us-central1",
         "scaleTier": "STANDARD_1",
-        "masterType": "n1-standard-4,
+        "masterType": "n1-standard-4",
         "masterConfig": {
             "imageUri": PIPELINE_IMAGE,
-            "acceleratorConfig" : {
+            "acceleratorConfig": {
                 "count": 1,
                 "type": "NVIDIA_TESLA_K80",
             },
@@ -92,4 +92,14 @@ GCP_AI_PLATFORM_SERVING_ARGS = {
         "min_replica_count": 1,
         "max_replica_count": 1,
     },
+}
+
+GH_RELEASE_ARGS = {
+    "GH_RELEASE": {
+        "ACCESS_TOKEN": "$GH_ACCESS_TOKEN",
+        "USERNAME": "deep-diver",
+        "REPONAME": "PyGithubTest",
+        "BRANCH": "main",
+        "ASSETNAME": "saved_model.tar.gz",
+    }
 }
