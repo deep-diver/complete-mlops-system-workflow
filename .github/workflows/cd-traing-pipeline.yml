@@ -60,7 +60,8 @@ jobs:
       env: 
         GH_ACCESS_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
       run: |
-        envsubst '$GH_ACCESS_TOKEN' < pipeline/configs.py > pipeline/configs.py
+        envsubst '$GH_ACCESS_TOKEN' < pipeline/configs.py > pipeline/configs_tmp.py
+        mv pipeline/configs_tmp.py pipeline/configs.py
         cat pipeline/configs.py
 
     - name: 'Compile TFX Training Pipeline'
