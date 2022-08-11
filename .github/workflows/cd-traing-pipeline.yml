@@ -45,6 +45,14 @@ jobs:
         a=`echo ${{ github.event.inputs.gcpProject }} | sed -e "s/-/_/g"`
         echo "::set-output name=GCP_SECRET_KEY::$a"
         
+    - name: 'Replace GitHub Access Token Placeholder'
+      working-directory: 'training_pipeline'
+      env: 
+        GH_ACCESS_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
+      run:
+        envsubst '$GH_ACCESS_TOKEN' < pipeline/configs.py > pipeline/configs.py
+        cat pipeline/configs.py
+        
     - name: 'Authenticate to Google Cloud'
       uses: 'google-github-actions/auth@v0'
       with:
