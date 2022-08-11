@@ -1,0 +1,6 @@
+pytest
+kfp
+tensorflow-cloud
+keras-tuner
+PyGithub
+wget
