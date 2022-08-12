@@ -37,7 +37,9 @@ def release_model_for_github(
         target_commitish=branch,
     )
 
+    print(f"model_path: {model_path}")
     if model_path.startswith("gs://"):
+        print("download pushed model")
         root_dir = "saved_model"
         os.mkdir(root_dir)
 
@@ -59,8 +61,10 @@ def release_model_for_github(
 
         model_path = root_dir
 
+    print("compress the model")
     with tarfile.open(model_archive, "w:gz") as tar:
         tar.add(model_path)
 
+    print("upload the model")
     release.upload_asset(model_archive, name=model_archive)
     return f"https://github.com/{username}/{reponame}/releases/tag/{model_version_name}"
