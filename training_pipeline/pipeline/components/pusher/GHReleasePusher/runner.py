@@ -55,7 +55,7 @@ def release_model_for_github(
 
                 sub_blobnames = tf.io.gfile.listdir(blob)
                 for sub_blobname in sub_blobnames:
-                    sub_blob = f"{blob}/{sub_blobname}"
+                    sub_blob = f"{blob}{sub_blobname}"
 
                     logging.warning(f"{sub_dir}/{sub_blobname}")
                     tf.io.gfile.copy(sub_blob, f"{sub_dir}{sub_blobname}")
