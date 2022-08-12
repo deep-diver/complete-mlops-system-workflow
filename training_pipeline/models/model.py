@@ -145,9 +145,7 @@ def cloud_tuner_fn(fn_args: FnArgs) -> TunerFnResult:
         _build_keras_model,
         max_trials=6,
         hyperparameters=_get_hyperparameters(),
-        project_id=fn_args.custom_config[TUNING_ARGS_KEY][TRAINING_ARGS_KEY][
-            VERTEX_PROJECT_KEY
-        ],
+        project_id=fn_args.custom_config[TUNING_ARGS_KEY][VERTEX_PROJECT_KEY],
         region=fn_args.custom_config[TUNING_ARGS_KEY][VERTEX_REGION_KEY],
         objective="val_sparse_categorical_accuracy",
         directory=fn_args.working_dir,
