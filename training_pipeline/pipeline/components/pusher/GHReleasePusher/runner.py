@@ -47,7 +47,7 @@ def release_model_for_github(
         blobnames = tf.io.gfile.listdir(model_path)
 
         for blobname in blobnames:
-            blob = f"{model_path}/blobname"
+            blob = f"{model_path}/{blobname}"
 
             if tf.io.gfile.isdir(blob):
                 sub_dir = f"{root_dir}/{blobname}"
@@ -58,7 +58,7 @@ def release_model_for_github(
                     sub_blob = f"{blob}/{sub_blobname}"
                     tf.io.gfile.copy(sub_blob, sub_dir)
             else:
-                tf.io.gfile.copy(blob, f"{root_dir}/blobname")
+                tf.io.gfile.copy(blob, f"{root_dir}/{blobname}")
 
         model_path = root_dir
 
