@@ -23,7 +23,7 @@ from tfx.extensions.google_cloud_ai_platform.pusher.component import (
     Pusher as VertexPusher,
 )
 from tfx.extensions.google_cloud_ai_platform.tuner.component import Tuner as VertexTuner
-from components.pusher.GHReleasePusher.component import Pusher as GHPusher
+from pipeline.components.pusher.GHReleasePusher.component import Pusher as GHPusher
 from tfx.components import Transform
 from tfx.dsl.components.common import resolver
 from tfx.dsl.experimental import latest_blessed_model_resolver
@@ -80,22 +80,22 @@ def create_pipeline(
     )
     components.append(transform)
 
-#     tuner = VertexTuner(
-#         tuner_fn=modules["cloud_tuner_fn"],
-#         examples=transform.outputs["transformed_examples"],
-#         transform_graph=transform.outputs["transform_graph"],
-#         train_args=train_args,
-#         eval_args=eval_args,
-#         tune_args=tuner_args,
-#         custom_config=ai_platform_tuner_args,
-#     )
-#     components.append(tuner)
+    #     tuner = VertexTuner(
+    #         tuner_fn=modules["cloud_tuner_fn"],
+    #         examples=transform.outputs["transformed_examples"],
+    #         transform_graph=transform.outputs["transform_graph"],
+    #         train_args=train_args,
+    #         eval_args=eval_args,
+    #         tune_args=tuner_args,
+    #         custom_config=ai_platform_tuner_args,
+    #     )
+    #     components.append(tuner)
 
     trainer_args = {
         "run_fn": modules["training_fn"],
         "transformed_examples": transform.outputs["transformed_examples"],
         "schema": schema_gen.outputs["schema"],
-#         "hyperparameters": tuner.outputs["best_hyperparameters"],
+        #         "hyperparameters": tuner.outputs["best_hyperparameters"],
         "transform_graph": transform.outputs["transform_graph"],
         "train_args": train_args,
         "eval_args": eval_args,

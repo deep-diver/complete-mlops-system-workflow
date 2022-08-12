@@ -14,7 +14,7 @@ on:
       pipelineName:
         description: 'TFX Pipeline Name to Trigger'
         required: true
-        default: 'img-classification'
+        default: 'resnet50-tfx-pipeline6'
       spanPattern:
         description: 'Span Numbers (regex)'
         required: true
@@ -54,6 +54,10 @@ jobs:
         
     - name: 'Set up Cloud SDK'
       uses: 'google-github-actions/setup-gcloud@v0'
+
+    - name: 'Set up docker auth in gcloud'
+      run: |
+        gcloud --quiet auth configure-docker
 
     - name: 'Replace GitHub Access Token Placeholder'
       working-directory: 'training_pipeline'

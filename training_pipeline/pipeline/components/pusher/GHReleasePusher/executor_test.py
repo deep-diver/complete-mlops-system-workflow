@@ -6,8 +6,8 @@ from unittest import mock
 
 import tensorflow as tf
 from tfx.dsl.io import fileio
-from components.pusher.GHReleasePusher import executor
-from components.pusher.GHReleasePusher import constants
+from pipeline.components.pusher.GHReleasePusher import executor
+from pipeline.components.pusher.GHReleasePusher import constants
 from tfx.types import standard_artifacts
 from tfx.types import standard_component_specs
 from tfx.utils import json_utils
