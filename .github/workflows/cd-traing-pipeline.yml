@@ -55,6 +55,10 @@ jobs:
     - name: 'Set up Cloud SDK'
       uses: 'google-github-actions/setup-gcloud@v0'
 
+    - name: 'Set up docker auth in gcloud'
+      run: |
+        gcloud --quiet auth configure-docker
+
     - name: 'Replace GitHub Access Token Placeholder'
       working-directory: 'training_pipeline'
       env: 
