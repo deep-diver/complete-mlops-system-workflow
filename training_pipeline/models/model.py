@@ -139,7 +139,7 @@ def cloud_tuner_fn(fn_args: FnArgs) -> TunerFnResult:
     TUNING_ARGS_KEY = vertex_tuner_const.TUNING_ARGS_KEY
     TRAINING_ARGS_KEY = vertex_training_const.TRAINING_ARGS_KEY
     VERTEX_PROJECT_KEY = "project"
-    VERTEX_REGION_KEY = vertex_const.VERTEX_REGION_KEY
+    VERTEX_REGION_KEY = "region"
 
     tuner = CloudTuner(
         _build_keras_model,
