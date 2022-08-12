@@ -95,7 +95,7 @@ def create_pipeline(
         "run_fn": modules["training_fn"],
         "transformed_examples": transform.outputs["transformed_examples"],
         "schema": schema_gen.outputs["schema"],
-        #         "hyperparameters": tuner.outputs["best_hyperparameters"],
+        "hyperparameters": tuner.outputs["best_hyperparameters"],
         "transform_graph": transform.outputs["transform_graph"],
         "train_args": train_args,
         "eval_args": eval_args,
