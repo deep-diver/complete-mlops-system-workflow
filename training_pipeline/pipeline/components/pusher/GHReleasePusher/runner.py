@@ -2,8 +2,9 @@ from typing import Any, Dict
 
 import os
 import tarfile
-from github import Github
+from absl import logging
 
+from github import Github
 import tensorflow as tf
 
 from pipeline.components.pusher.GHReleasePusher import constants
@@ -37,15 +38,15 @@ def release_model_for_github(
         target_commitish=branch,
     )
 
-    print(f"model_path: {model_path}")
+    logging.warning(f"model_path: {model_path}")
     if model_path.startswith("gs://"):
-        print("download pushed model")
+        logging.warning("download pushed model")
         root_dir = "saved_model"
         os.mkdir(root_dir)
 
         blobnames = tf.io.gfile.listdir(model_path)
 
-        for blobname in blognames:
+        for blobname in blobnames:
             blob = f"{model_path}/blobname"
 
             if tf.io.gfile.isdir(blob):
@@ -61,10 +62,10 @@ def release_model_for_github(
 
         model_path = root_dir
 
-    print("compress the model")
+    logging.warning("compress the model")
     with tarfile.open(model_archive, "w:gz") as tar:
         tar.add(model_path)
 
-    print("upload the model")
+    logging.warning("upload the model")
     release.upload_asset(model_archive, name=model_archive)
     return f"https://github.com/{username}/{reponame}/releases/tag/{model_version_name}"
