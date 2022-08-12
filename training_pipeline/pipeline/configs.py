@@ -63,9 +63,18 @@ GCP_AI_PLATFORM_TUNER_ARGS = {
     vertex_tuner_const.TUNING_ARGS_KEY: {
         "project": GOOGLE_CLOUD_PROJECT,
         "region": "us-central1",
-        "scaleTier": "STANDARD_1",
+        "scaleTier": "CUSTOM",
         "masterType": "n1-standard-4",
         "masterConfig": {
+            "imageUri": PIPELINE_IMAGE,
+            "acceleratorConfig": {
+                "count": 1,
+                "type": "NVIDIA_TESLA_K80",
+            },
+        },
+        "workerType": "n1-standard-4",
+        "workerCount": 3,
+        "workerConfig": {
             "imageUri": PIPELINE_IMAGE,
             "acceleratorConfig": {
                 "count": 1,
