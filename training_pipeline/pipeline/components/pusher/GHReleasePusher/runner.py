@@ -1,7 +1,10 @@
 from typing import Any, Dict
 
+import os
 import tarfile
 from github import Github
+
+import tensorflow as tf
 
 from pipeline.components.pusher.GHReleasePusher import constants
 
@@ -33,6 +36,28 @@ def release_model_for_github(
         prerelease=False,
         target_commitish=branch,
     )
+
+    if model_path.startswith("gs://"):
+        root_dir = "saved_model"
+        os.mkdir(root_dir)
+
+        blobnames = tf.io.gfile.listdir(model_path)
+
+        for blobname in blognames:
+            blob = f"{model_path}/blobname"
+
+            if tf.io.gfile.isdir(blob):
+                sub_dir = f"{root_dir}/{blobname}"
+                os.mkdir(sub_dir)
+
+                sub_blobnames = tf.io.gfile.listdir(blob)
+                for sub_blobname in sub_blobnames:
+                    sub_blob = f"{blob}/{sub_blobname}"
+                    tf.io.gfile.copy(sub_blob, sub_dir)
+            else:
+                tf.io.gfile.copy(blob, f"{root_dir}/blobname")
+
+        model_path = root_dir
 
     with tarfile.open(model_archive, "w:gz") as tar:
         tar.add(model_path)
