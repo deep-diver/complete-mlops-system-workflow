@@ -81,9 +81,6 @@ def _input_fn(
     is_train: bool = False,
     batch_size: int = 200,
 ) -> tf.data.Dataset:
-    print()
-    print(file_pattern)
-    print()
     dataset = data_accessor.tf_dataset_factory(
         file_pattern,
         dataset_options.TensorFlowDatasetOptions(
@@ -91,9 +88,6 @@ def _input_fn(
         ),
         tf_transform_output.transformed_metadata.schema,
     )
-    print()
-    print(dataset)
-    print()
 
     if is_train:
         dataset = dataset.map(lambda x, y: (_data_augmentation(x), y))
@@ -103,7 +97,7 @@ def _input_fn(
 
 def _get_hyperparameters() -> keras_tuner.HyperParameters:
     hp = keras_tuner.HyperParameters()
-    hp.Choice("learning_rate", [1e-2, 1e-3], default=1e-3)
+    hp.Choice("learning_rate", [1e-3, 1e-2], default=1e-3)
     return hp
 
 
