@@ -29,7 +29,7 @@ DATA_PATH = f"gs://{GCS_BUCKET_NAME}/data/"
 PREPROCESSING_FN = "models.preprocessing.preprocessing_fn"
 TRAINING_FN = "models.model.run_fn"
 TUNER_FN = "models.model.tuner_fn"
-CLOUD_TUNER_FN = "models.model.cloud_tuner_fn"
+CLOUD_TUNER_FN = "models.model.tuner_fn"
 
 TRAIN_NUM_STEPS = 160
 EVAL_NUM_STEPS = 4
