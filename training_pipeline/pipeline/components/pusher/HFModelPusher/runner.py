@@ -22,7 +22,7 @@ def release_model_for_hf_model(
     repo_id = f"{username}/{reponame}"
 
     repo_type = "model"
-    
+
     hf_api = HfApi()
     hf_api.set_access_token(access_token)
 
@@ -56,17 +56,20 @@ def release_model_for_hf_model(
     model_name = f"v{int(time.time())}"
 
     try:
-        hf_api.create_repo(token=access_token,
-                            repo_id=f"{repo_id}-model",
-                            repo_type=repo_type)
+        hf_api.create_repo(
+            token=access_token, repo_id=f"{repo_id}-model", repo_type=repo_type
+        )
     except HTTPError:
         logging.warning(f"{repo_id}-model repository already exists")
 
-    hf_hub_path = hf_api.upload_folder(f"{repo_id}-model", 
-                        model_path, 
-                        token=access_token,
-                        create_pr=True,
-                        repo_type=repo_type,
-                        commit_message=model_name)
+    hf_hub_path = hf_api.upload_folder(
+        f"{repo_id}-model",
+        model_path,
+        token=access_token,
+        create_pr=True,
+        repo_type=repo_type,
+        commit_message=model_name,
+    )
+    logging.warning(f"file is uploaded at {repo_id}-model")
 
     return hf_hub_path
