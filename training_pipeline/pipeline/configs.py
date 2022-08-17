@@ -60,32 +60,28 @@ GCP_AI_PLATFORM_TRAINING_ARGS = {
 }
 
 GCP_AI_PLATFORM_TUNER_ARGS = {
+    vertex_const.ENABLE_VERTEX_KEY: True,
+    vertex_const.VERTEX_REGION_KEY: GOOGLE_CLOUD_REGION,
     vertex_tuner_const.TUNING_ARGS_KEY: {
         "project": GOOGLE_CLOUD_PROJECT,
-        "region": "us-central1",
-        "scaleTier": "CUSTOM",
-        "masterType": "n1-standard-4",
-        "masterConfig": {
-            "imageUri": PIPELINE_IMAGE,
-            "acceleratorConfig": {
-                "count": 1,
-                "type": "NVIDIA_TESLA_K80",
-            },
-        },
-        "workerType": "n1-standard-4",
-        "workerCount": 3,
-        "workerConfig": {
-            "imageUri": PIPELINE_IMAGE,
-            "acceleratorConfig": {
-                "count": 1,
-                "type": "NVIDIA_TESLA_K80",
-            },
-        },
-        "serviceAccount": "vizier@gcp-ml-172005.iam.gserviceaccount.com",
+        "worker_pool_specs": [
+            {
+                "machine_spec": {
+                    "machine_type": "n1-standard-4",
+                    "accelerator_type": "NVIDIA_TESLA_K80",
+                    "accelerator_count": 1,
+                },
+                "replica_count": 1,
+                "container_spec": {
+                    "image_uri": PIPELINE_IMAGE,
+                },
+            }
+        ],
     },
     vertex_tuner_const.REMOTE_TRIALS_WORKING_DIR_KEY: os.path.join(
         PIPELINE_ROOT, "trials"
     ),
+    "use_gpu": True,
 }
 
 GCP_AI_PLATFORM_SERVING_ARGS = {
