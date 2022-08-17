@@ -5,3 +5,4 @@ tensorflow-cloud
 keras-tuner
 PyGithub
 wget
+huggingface-hub
