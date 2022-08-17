@@ -66,8 +66,9 @@ def release_model_for_hf_model(
         logging.warning(f"{repo_id}-model repository already exists")
 
     hf_hub_path = hf_api.upload_folder(
-        f"{repo_id}-model",
-        model_path,
+        repo_id=f"{repo_id}-model",        
+        folder_path=model_path,
+        path_in_repo=f"/checkpoints/{model_name}",
         token=access_token,
         create_pr=True,
         repo_type=repo_type,
