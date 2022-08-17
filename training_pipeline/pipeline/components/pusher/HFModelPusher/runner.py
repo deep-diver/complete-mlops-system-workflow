@@ -4,8 +4,10 @@ import os
 import tarfile
 from absl import logging
 
-from github import Github
 import tensorflow as tf
+
+from huggingface_hub import HfApi
+from requests.exceptions import HTTPError
 
 from pipeline.components.pusher.HFModelPusher import constants
 
