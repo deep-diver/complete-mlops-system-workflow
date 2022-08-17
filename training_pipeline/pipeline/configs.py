@@ -62,10 +62,10 @@ GCP_AI_PLATFORM_TRAINING_ARGS = {
 GCP_AI_PLATFORM_TUNER_ARGS = {
     vertex_const.ENABLE_VERTEX_KEY: True,
     vertex_const.VERTEX_REGION_KEY: GOOGLE_CLOUD_REGION,
-    "project": GOOGLE_CLOUD_PROJECT,
     vertex_tuner_const.TUNING_ARGS_KEY: {
+        "project": GOOGLE_CLOUD_PROJECT,
+        # "serviceAccount": "vizier@gcp-ml-172005.iam.gserviceaccount.com",
         "job_spec": {
-            # "serviceAccount": "vizier@gcp-ml-172005.iam.gserviceaccount.com",
             "worker_pool_specs": [
                 {
                     "machine_spec": {
@@ -79,7 +79,7 @@ GCP_AI_PLATFORM_TUNER_ARGS = {
                     },
                 }
             ],
-        }
+        },
     },
     vertex_tuner_const.REMOTE_TRIALS_WORKING_DIR_KEY: os.path.join(
         PIPELINE_ROOT, "trials"
