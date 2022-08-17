@@ -64,9 +64,9 @@ class Executor(tfx_pusher_executor.Executor):
                 "custom_config in execution properties needs to be a dict."
             )
 
-        gh_release_args = custom_config.get(constants.GH_RELEASE_KEY)
+        gh_release_args = custom_config.get(constants.HF_MODEL_RELEASE_KEY)
         if not gh_release_args:
-            raise ValueError("'GH_RELEASE' is missing in 'custom_config'")
+            raise ValueError("'HF_MODEL_RELEASE_KEY' is missing in 'custom_config'")
         model_push = artifact_utils.get_single_instance(
             output_dict[standard_component_specs.PUSHED_MODEL_KEY]
         )
