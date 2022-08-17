@@ -111,3 +111,11 @@ GH_RELEASE_ARGS = {
         "ASSETNAME": "saved_model.tar.gz",
     }
 }
+
+HF_MODEL_RELEASE_ARGS = {
+    "HF_MODEL_RELEASE": {
+        "ACCESS_TOKEN": "$HF_ACCESS_TOKEN",
+        "USERNAME": "chansung",
+        "REPONAME": PIPELINE_NAME,
+    }
+}

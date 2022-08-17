@@ -59,12 +59,13 @@ jobs:
       run: |
         gcloud --quiet auth configure-docker
 
-    - name: 'Replace GitHub Access Token Placeholder'
+    - name: 'Replace Access Token Placeholder'
       working-directory: 'training_pipeline'
       env: 
         GH_ACCESS_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
+        HF_ACCESS_TOKEN: ${{ secrets.HF_ACCESS_TOKEN }}
       run: |
-        envsubst '$GH_ACCESS_TOKEN' < pipeline/configs.py > pipeline/configs_tmp.py
+        envsubst '$GH_ACCESS_TOKEN, $HF_ACCESS_TOKEN' < pipeline/configs.py > pipeline/configs_tmp.py
         mv pipeline/configs_tmp.py pipeline/configs.py
         cat pipeline/configs.py
 
