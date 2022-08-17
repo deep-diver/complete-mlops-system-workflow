@@ -4,7 +4,7 @@ import tfx.extensions.google_cloud_ai_platform.constants as vertex_const
 import tfx.extensions.google_cloud_ai_platform.trainer.executor as vertex_training_const
 import tfx.extensions.google_cloud_ai_platform.tuner.executor as vertex_tuner_const
 
-PIPELINE_NAME = "resnet50-tfx-pipeline-tuner-test"
+PIPELINE_NAME = "resnet50-tfx-pipeline-hf-model-test9"
 
 try:
     import google.auth  # pylint: disable=g-import-not-at-top  # pytype: disable=import-error
@@ -109,5 +109,13 @@ GH_RELEASE_ARGS = {
         "REPONAME": "PyGithubTest",
         "BRANCH": "main",
         "ASSETNAME": "saved_model.tar.gz",
+    }
+}
+
+HF_MODEL_RELEASE_ARGS = {
+    "HF_MODEL_RELEASE": {
+        "ACCESS_TOKEN": "$HF_ACCESS_TOKEN",
+        "USERNAME": "chansung",
+        "REPONAME": PIPELINE_NAME,
     }
 }

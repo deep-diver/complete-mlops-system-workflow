@@ -81,6 +81,7 @@ def run():
             ai_platform_tuner_args=configs.GCP_AI_PLATFORM_TUNER_ARGS,
             ai_platform_serving_args=configs.GCP_AI_PLATFORM_SERVING_ARGS,
             gh_release_args=configs.GH_RELEASE_ARGS,
+            hf_model_release_args=configs.HF_MODEL_RELEASE_ARGS,
         )
     )
 
