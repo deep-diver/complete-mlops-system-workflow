@@ -5,3 +5,4 @@ keras-tuner
 PyGithub
 wget
 oauth2client
+huggingface-hub
