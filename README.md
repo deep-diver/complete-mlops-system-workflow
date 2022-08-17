@@ -80,3 +80,7 @@ This repository shows how to build a complete MLOps system with [TensorFlow eXte
 ```
 
 **👋 NOTE**: One could argue the whole component can be implemented without any cloud services. However, in my opinion, it is non trivial to achieve production ready quality of MLOps system without any help of cloud services. 
+
+## Acknowledgements
+
+I am thankful to the ML Developer Programs team at Google that provided GCP support. 
