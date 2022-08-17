@@ -4,7 +4,7 @@ import tfx.extensions.google_cloud_ai_platform.constants as vertex_const
 import tfx.extensions.google_cloud_ai_platform.trainer.executor as vertex_training_const
 import tfx.extensions.google_cloud_ai_platform.tuner.executor as vertex_tuner_const
 
-PIPELINE_NAME = "resnet50-tfx-pipeline6"
+PIPELINE_NAME = "resnet50-tfx-pipeline-tuner-test"
 
 try:
     import google.auth  # pylint: disable=g-import-not-at-top  # pytype: disable=import-error
@@ -29,7 +29,7 @@ DATA_PATH = f"gs://{GCS_BUCKET_NAME}/data/"
 PREPROCESSING_FN = "models.preprocessing.preprocessing_fn"
 TRAINING_FN = "models.model.run_fn"
 TUNER_FN = "models.model.tuner_fn"
-CLOUD_TUNER_FN = "models.model.cloud_tuner_fn"
+CLOUD_TUNER_FN = "models.model.tuner_fn"
 
 TRAIN_NUM_STEPS = 160
 EVAL_NUM_STEPS = 4
@@ -60,23 +60,31 @@ GCP_AI_PLATFORM_TRAINING_ARGS = {
 }
 
 GCP_AI_PLATFORM_TUNER_ARGS = {
+    vertex_const.ENABLE_VERTEX_KEY: True,
+    vertex_const.VERTEX_REGION_KEY: GOOGLE_CLOUD_REGION,
     vertex_tuner_const.TUNING_ARGS_KEY: {
         "project": GOOGLE_CLOUD_PROJECT,
-        "region": "us-central1",
-        "scaleTier": "STANDARD_1",
-        "masterType": "n1-standard-4",
-        "masterConfig": {
-            "imageUri": PIPELINE_IMAGE,
-            "acceleratorConfig": {
-                "count": 1,
-                "type": "NVIDIA_TESLA_K80",
-            },
+        # "serviceAccount": "vizier@gcp-ml-172005.iam.gserviceaccount.com",
+        "job_spec": {
+            "worker_pool_specs": [
+                {
+                    "machine_spec": {
+                        "machine_type": "n1-standard-4",
+                        "accelerator_type": "NVIDIA_TESLA_K80",
+                        "accelerator_count": 1,
+                    },
+                    "replica_count": 1,
+                    "container_spec": {
+                        "image_uri": PIPELINE_IMAGE,
+                    },
+                }
+            ],
         },
-        # 'serviceAccount': 'vizier@gcp-ml-172005.iam.gserviceaccount.com',
     },
     vertex_tuner_const.REMOTE_TRIALS_WORKING_DIR_KEY: os.path.join(
         PIPELINE_ROOT, "trials"
     ),
+    "use_gpu": True,
 }
 
 GCP_AI_PLATFORM_SERVING_ARGS = {
