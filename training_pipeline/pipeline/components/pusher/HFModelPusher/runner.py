@@ -79,4 +79,4 @@ def release_model_for_hf_model(
     except HTTPError as error:
         logging.warning(error)
 
-    return hf_hub_path
+    return (f"{repo_id}-model", f"checkpoints/{model_version_name}", hf_hub_path)

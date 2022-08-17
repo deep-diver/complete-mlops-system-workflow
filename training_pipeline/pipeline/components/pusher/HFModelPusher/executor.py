@@ -1,5 +1,5 @@
 import time
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from google.api_core import client_options
 from googleapiclient import discovery
@@ -20,6 +20,8 @@ from tfx.dsl.io import fileio
 
 # Keys for custom_config.
 _CUSTOM_CONFIG_KEY = "custom_config"
+_PUSHED_REPO_ID = "pushed_repo_id"
+_PUSHED_PATH_IN_REPO = "pushed_path_in_repo"
 
 
 class Executor(tfx_pusher_executor.Executor):
@@ -85,9 +87,11 @@ class Executor(tfx_pusher_executor.Executor):
             job_labels = telemetry_utils.make_labels_dict()
 
         model_name = f"v{int(time.time())}"
-        pushed_model_path = runner.release_model_for_hf_model(
+        repo_id, path_in_repo, model_url = runner.release_model_for_hf_model(
             model_path=model_path,
             model_version_name=model_name,
             hf_release_args=hf_release_args,
         )
-        self._MarkPushed(model_push, pushed_destination=pushed_model_path)
+        self._MarkPushed(model_push, pushed_destination=model_url)
+        model_path.set_string_custom_property(_PUSHED_REPO_ID, repo_id)
+        model_path.set_string_custom_property(_PUSHED_PATH_IN_REPO, path_in_repo)
