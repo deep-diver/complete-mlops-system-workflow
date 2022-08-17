@@ -64,8 +64,8 @@ class Executor(tfx_pusher_executor.Executor):
                 "custom_config in execution properties needs to be a dict."
             )
 
-        gh_release_args = custom_config.get(constants.HF_MODEL_RELEASE_KEY)
-        if not gh_release_args:
+        hf_release_args = custom_config.get(constants.HF_MODEL_RELEASE_KEY)
+        if not hf_release_args:
             raise ValueError("'HF_MODEL_RELEASE_KEY' is missing in 'custom_config'")
         model_push = artifact_utils.get_single_instance(
             output_dict[standard_component_specs.PUSHED_MODEL_KEY]
@@ -88,6 +88,6 @@ class Executor(tfx_pusher_executor.Executor):
         pushed_model_path = runner.release_model_for_hf_model(
             model_path=model_path,
             model_version_name=model_name,
-            gh_release_args=gh_release_args,
+            hf_release_args=hf_release_args,
         )
         self._MarkPushed(model_push, pushed_destination=pushed_model_path)
