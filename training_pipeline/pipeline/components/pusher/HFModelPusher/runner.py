@@ -32,7 +32,7 @@ def release_model_for_hf_model(
     logging.warning(f"model_path: {model_path}")
 
     logging.warning("download pushed model")
-    root_dir = model_name
+    root_dir = model_version_name
     os.mkdir(root_dir)
 
     blobnames = tf.io.gfile.listdir(model_path)
