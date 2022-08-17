@@ -16,12 +16,12 @@ from pipeline.components.pusher.HFModelPusher import constants
 def release_model_for_hf_model(
     model_path: str,
     model_version_name: str,
-    gh_release_args: Dict[str, Any],
+    hf_release_args: Dict[str, Any],
 ) -> str:
-    access_token = gh_release_args[constants.ACCESS_TOKEN_KEY]
+    access_token = hf_release_args[constants.ACCESS_TOKEN_KEY]
 
-    username = gh_release_args[constants.USERNAME_KEY]
-    reponame = gh_release_args[constants.REPONAME_KEY]
+    username = hf_release_args[constants.USERNAME_KEY]
+    reponame = hf_release_args[constants.REPONAME_KEY]
     repo_id = f"{username}/{reponame}"
 
     repo_type = "model"
@@ -32,7 +32,6 @@ def release_model_for_hf_model(
     logging.warning(f"model_path: {model_path}")
 
     logging.warning("download pushed model")
-    model_name = f"v{int(time.time())}"
     root_dir = model_name
     os.mkdir(root_dir)
 
@@ -62,22 +61,22 @@ def release_model_for_hf_model(
         hf_api.create_repo(
             token=access_token, repo_id=f"{repo_id}-model", repo_type=repo_type
         )
-    except HTTPError as e:
-        logging.warning(e)
+    except HTTPError:
         logging.warning(f"{repo_id}-model repository may already exist")
-    finally:
-        try:
-            hf_hub_path = hf_api.upload_folder(
-                repo_id=f"{repo_id}-model",
-                folder_path=model_path,
-                token=access_token,
-                create_pr=True,
-                repo_type=repo_type,
-                commit_message=model_name,
-            )
-            logging.warning(f"file is uploaded at {repo_id}-model")
-        except HTTPError:
-            logging.warning(e)
-            raise HTTPError
+        pass
+
+    try:
+        hf_hub_path = hf_api.upload_folder(
+            repo_id=f"{repo_id}-model",
+            folder_path=model_path,
+            path_in_repo=f"checkpoints/{model_version_name}",
+            token=access_token,
+            create_pr=True,
+            repo_type=repo_type,
+            commit_message=model_version_name,
+        )
+        logging.warning(f"file is uploaded at {repo_id}-model")
+    except HTTPError as error:
+        logging.warning(error)
 
     return hf_hub_path
