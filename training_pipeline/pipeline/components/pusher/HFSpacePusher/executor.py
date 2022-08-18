@@ -55,12 +55,14 @@ class Executor(base_executor.BaseExecutor):
             output_dict[constants.PUSHED_SPACE_KEY]
         )
 
-        if pushed_hf_model.pushed == 0:
+        if pushed_hf_model.get_int_custom_property("pushed") == 0:
             space_to_push.set_int_custom_property("pushed", 0)
             return
 
-        repo_id = pushed_hf_model.pushed_repo_id
-        model_version_name = pushed_hf_model.model_version_name
+        repo_id = pushed_hf_model.get_string_custom_property("pushed_repo_id")
+        model_version_name = pushed_hf_model.get_string_custom_property(
+            "model_version_name"
+        )
 
         repo_id, space_url = runner.release_model_for_hf_space(
             model_repo_id=repo_id,
