@@ -170,7 +170,7 @@ def create_pipeline(
         "model": hf_model_pusher.outputs["pushed_model"],
         "custom_config": hf_space_release_args,
     }
-    hf_space_pusher = HFSpacePusher(**space_pusher_args).with_id("HFModelPusher")
+    hf_space_pusher = HFSpacePusher(**space_pusher_args).with_id("HFSpacePusher")
     components.append(hf_space_pusher)
 
     return pipeline.Pipeline(
