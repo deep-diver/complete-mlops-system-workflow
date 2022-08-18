@@ -31,6 +31,8 @@ TRAINING_FN = "models.model.run_fn"
 TUNER_FN = "models.model.tuner_fn"
 CLOUD_TUNER_FN = "models.model.tuner_fn"
 
+GRADIO_APP_PATH = "apps.gradio"
+
 TRAIN_NUM_STEPS = 160
 EVAL_NUM_STEPS = 4
 NUM_PARALLEL_TRIALS = 3
@@ -125,6 +127,6 @@ HF_SPACE_RELEASE_ARGS = {
         "ACCESS_TOKEN": "$HF_ACCESS_TOKEN",
         "USERNAME": "chansung",
         "REPONAME": PIPELINE_NAME,
-        "APP_PATH": "hello fucking world",
+        "APP_PATH": GRADIO_APP_PATH,
     }
 }
