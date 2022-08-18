@@ -25,7 +25,7 @@ def release_model_for_hf_space(
     reponame = hf_release_args[constants.REPONAME_KEY]
     repo_id = f"{username}/{reponame}"
 
-    app_path = hf_release_args[constants.APP_PATH]
+    app_path = hf_release_args[constants.APP_PATH_KEY]
 
     repo_type = "space"
 
