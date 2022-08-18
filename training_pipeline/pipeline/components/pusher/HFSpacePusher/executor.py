@@ -48,7 +48,7 @@ class Executor(base_executor.BaseExecutor):
         logging.warning(input_dict)
 
         pushed_hf_model = artifact_utils.get_single_instance(
-            input_dict[standard_component_specs.PUSHED_MODEL_KEY]
+            input_dict[constants.HF_MODEL_KEY]
         )
 
         space_to_push = artifact_utils.get_single_instance(
