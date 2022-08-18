@@ -11,7 +11,7 @@ import tensorflow as tf
 from huggingface_hub import HfApi
 from requests.exceptions import HTTPError
 
-from pipeline.components.pusher.HFModelPusher import constants
+from pipeline.components.pusher.HFSpacePusher import constants
 
 
 def release_model_for_hf_space(
