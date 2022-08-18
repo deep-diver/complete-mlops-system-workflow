@@ -4,7 +4,7 @@ import tfx.extensions.google_cloud_ai_platform.constants as vertex_const
 import tfx.extensions.google_cloud_ai_platform.trainer.executor as vertex_training_const
 import tfx.extensions.google_cloud_ai_platform.tuner.executor as vertex_tuner_const
 
-PIPELINE_NAME = "resnet50-tfx-pipeline-hf-model-test9"
+PIPELINE_NAME = "resnet50-tfx-pipeline-hf-space-test1"
 
 try:
     import google.auth  # pylint: disable=g-import-not-at-top  # pytype: disable=import-error
@@ -117,5 +117,14 @@ HF_MODEL_RELEASE_ARGS = {
         "ACCESS_TOKEN": "$HF_ACCESS_TOKEN",
         "USERNAME": "chansung",
         "REPONAME": PIPELINE_NAME,
+    }
+}
+
+HF_SPACE_RELEASE_ARGS = {
+    "HF_SPACE_RELEASE": {
+        "ACCESS_TOKEN": "$HF_ACCESS_TOKEN",
+        "USERNAME": "chansung",
+        "REPONAME": PIPELINE_NAME,
+        "APP_PATH": "hello fucking world",
     }
 }
