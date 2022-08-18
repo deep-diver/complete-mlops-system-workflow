@@ -44,11 +44,11 @@ class Executor(base_executor.BaseExecutor):
             raise ValueError("'HF_SPACE_RELEASE_KEY' is missing in 'custom_config'")
 
         pushed_hf_model = artifact_utils.get_single_instance(
-            output_dict[constants.HF_MODEL_KEY]
+            input_dict[standard_component_specs.PUSHED_MODEL_KEY]
         )
 
         space_to_push = artifact_utils.get_single_instance(
-            output_dict[standard_component_specs.PUSHED_SPACE_KEY]
+            output_dict[constants.PUSHED_SPACE_KEY]
         )
 
         if pushed_hf_model.pushed == 0:
