@@ -69,11 +69,12 @@ def release_model_for_hf_model(
         hf_hub_path = hf_api.upload_folder(
             repo_id=f"{repo_id}-model",
             folder_path=model_path,
-            path_in_repo=f"checkpoints/{model_version_name}",
+            path_in_repo=".",
             token=access_token,
             create_pr=True,
             repo_type=repo_type,
             commit_message=model_version_name,
+            revision=model_version_name
         )
         logging.warning(f"file is uploaded at {repo_id}-model")
     except HTTPError as error:
