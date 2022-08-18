@@ -1,4 +1,6 @@
 import time
+from absl import logging
+
 from typing import Any, Dict, List, Optional
 
 from google.api_core import client_options
@@ -42,6 +44,8 @@ class Executor(base_executor.BaseExecutor):
         hf_release_args = custom_config.get(constants.HF_SPACE_RELEASE_KEY)
         if not hf_release_args:
             raise ValueError("'HF_SPACE_RELEASE_KEY' is missing in 'custom_config'")
+
+        logging.warning(input_dict)
 
         pushed_hf_model = artifact_utils.get_single_instance(
             input_dict[standard_component_specs.PUSHED_MODEL_KEY]
