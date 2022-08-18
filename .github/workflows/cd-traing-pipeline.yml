@@ -14,7 +14,7 @@ on:
       pipelineName:
         description: 'TFX Pipeline Name to Trigger'
         required: true
-        default: 'resnet50-tfx-pipeline-hf-model-test9'
+        default: 'resnet50-tfx-pipeline-hf-model-revision-1'
       spanPattern:
         description: 'Span Numbers (regex)'
         required: true

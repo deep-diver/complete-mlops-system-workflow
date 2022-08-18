@@ -74,7 +74,7 @@ def release_model_for_hf_model(
             create_pr=True,
             repo_type=repo_type,
             commit_message=model_version_name,
-            revision=model_version_name
+            revision=model_version_name,
         )
         logging.warning(f"file is uploaded at {repo_id}-model")
     except HTTPError as error:
