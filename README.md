@@ -83,4 +83,4 @@ This repository shows how to build a complete MLOps system with [TensorFlow eXte
 
 ## Acknowledgements
 
-I am thankful to the ML Developer Programs team at Google that provided GCP support. 
+I am thankful to the ML Developer Programs team at Google that provided GCP support.
