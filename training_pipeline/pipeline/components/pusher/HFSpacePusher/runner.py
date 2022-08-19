@@ -42,7 +42,7 @@ def release_model_for_hf_space(
 
     try:
         HfApi().create_repo(
-            token=access_token, repo_id=space_repo_id, repo_type=repo_type
+            token=access_token, repo_id=space_repo_id, repo_type=repo_type, space_sdk="gradio"
         )
     except HTTPError:
         logging.warning(f"{space_repo_id} repository may already exist")
