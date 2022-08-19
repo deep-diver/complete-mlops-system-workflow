@@ -11,6 +11,7 @@ with open(r"labels.txt", "r") as fp:
     for line in fp:
         labels.append(line[:-1])
 
+
 def classify_image(inp):
     inp = inp.reshape((-1, 224, 224, 3))
     inp = resnet50.preprocess_input(inp)
@@ -18,6 +19,7 @@ def classify_image(inp):
     prediction = model.predict(inp).flatten()
     confidences = {labels[i]: float(prediction[i]) for i in range(10)}
     return confidences
+
 
 iface = gr.Interface(
     fn=classify_image,
