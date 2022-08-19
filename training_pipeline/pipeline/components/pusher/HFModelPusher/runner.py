@@ -71,7 +71,7 @@ def release_model_for_hf_model(
             logging.warning(f"{root_dir}/{blobname}")
             tf.io.gfile.copy(blob, f"{root_dir}/{blobname}", overwrite=True)
 
-    repository.git_add(pattern=".")
+    repository.git_add(pattern=".", auto_lfs_track=True)
     repository.git_commit(commit_message="updload new version of the model")
     repository.git_push(upstream=f"origin {model_version_name}")
 
