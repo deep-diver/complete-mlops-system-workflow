@@ -21,7 +21,7 @@ from tfx.dsl.io import fileio
 # Keys for custom_config.
 _CUSTOM_CONFIG_KEY = "custom_config"
 _PUSHED_REPO_ID = "pushed_repo_id"
-_PUSHED_PATH_IN_REPO = "pushed_path_in_repo"
+_PUSHED_VERSION = "pushed_version"
 
 
 class Executor(tfx_pusher_executor.Executor):
@@ -87,11 +87,11 @@ class Executor(tfx_pusher_executor.Executor):
             job_labels = telemetry_utils.make_labels_dict()
 
         model_name = f"v{int(time.time())}"
-        repo_id, path_in_repo, model_url = runner.release_model_for_hf_model(
+        repo_id, model_url = runner.release_model_for_hf_model(
             model_path=model_path,
             model_version_name=model_name,
             hf_release_args=hf_release_args,
         )
         self._MarkPushed(model_push, pushed_destination=model_url)
         model_push.set_string_custom_property(_PUSHED_REPO_ID, repo_id)
-        model_push.set_string_custom_property(_PUSHED_PATH_IN_REPO, path_in_repo)
+        model_push.set_string_custom_property(_PUSHED_VERSION, model_name)
