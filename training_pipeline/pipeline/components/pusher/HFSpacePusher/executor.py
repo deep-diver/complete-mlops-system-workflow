@@ -19,8 +19,9 @@ from tfx import types
 
 # Keys for custom_config.
 _CUSTOM_CONFIG_KEY = "custom_config"
-_PUSHED_REPO_ID = "pushed_repo_id"
-_PUSHED_URL = "pushed_url"
+_PUSHED_REPO_ID = "pushed_model_repo_id"
+_PUSHED_VERSION = "pushed_version"
+_PUSHED_REPO_URL = "pushed_model_repo_url"
 
 
 class Executor(base_executor.BaseExecutor):
@@ -59,17 +60,18 @@ class Executor(base_executor.BaseExecutor):
             space_to_push.set_int_custom_property("pushed", 0)
             return
 
-        repo_id = pushed_hf_model.get_string_custom_property("pushed_repo_id")
-        model_version_name = pushed_hf_model.get_string_custom_property(
-            "model_version_name"
-        )
+        model_repo_id = pushed_hf_model.get_string_custom_property(_PUSHED_REPO_ID)
+        model_repo_url = pushed_hf_model.get_string_custom_property(_PUSHED_REPO_URL)
+        model_version = pushed_hf_model.get_string_custom_property(_PUSHED_VERSION)
 
-        repo_id, space_url = runner.release_model_for_hf_space(
-            model_repo_id=repo_id,
-            model_version_name=model_version_name,
+        model_repo_id, space_url = runner.release_model_for_hf_space(
+            model_repo_id=model_repo_id,
+            model_repo_url=model_repo_url,
+            model_version=model_version,
             hf_release_args=hf_release_args,
         )
 
         space_to_push.set_int_custom_property("pushed", 1)
-        space_to_push.set_string_custom_property(_PUSHED_URL, space_url)
-        space_to_push.set_string_custom_property(_PUSHED_REPO_ID, repo_id)
+        space_to_push.set_string_custom_property(_PUSHED_REPO_URL, space_url)
+        space_to_push.set_string_custom_property(_PUSHED_REPO_ID, model_repo_id)
+        space_to_push.set_string_custom_property(_PUSHED_VERSION, model_version)
