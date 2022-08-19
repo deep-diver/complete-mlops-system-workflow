@@ -21,7 +21,7 @@ from tfx.dsl.io import fileio
 # Keys for custom_config.
 _CUSTOM_CONFIG_KEY = "custom_config"
 _PUSHED_REPO_ID = "pushed_repo_id"
-_PUSHED_PATH_IN_REPO = "pushed_path_in_repo"
+_PUSHED_VERSION = "pushed_version"
 
 
 class Executor(tfx_pusher_executor.Executor):
@@ -94,3 +94,4 @@ class Executor(tfx_pusher_executor.Executor):
         )
         self._MarkPushed(model_push, pushed_destination=model_url)
         model_push.set_string_custom_property(_PUSHED_REPO_ID, repo_id)
+        model_push.set_string_custom_property(_PUSHED_VERSION, model_name)
