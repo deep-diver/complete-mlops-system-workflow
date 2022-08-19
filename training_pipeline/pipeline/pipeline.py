@@ -155,12 +155,12 @@ def create_pipeline(
         "model_blessing": evaluator.outputs["blessing"],
         "custom_config": ai_platform_serving_args,
     }
-    pusher = VertexPusher(**pusher_args)  # pylint: disable=unused-variable
-    components.append(pusher)
+    # pusher = VertexPusher(**pusher_args)  # pylint: disable=unused-variable
+    # components.append(pusher)
 
-    pusher_args["custom_config"] = gh_release_args
-    gh_pusher = GHPusher(**pusher_args).with_id("GHReleasePusher")
-    components.append(gh_pusher)
+    # pusher_args["custom_config"] = gh_release_args
+    # gh_pusher = GHPusher(**pusher_args).with_id("GHReleasePusher")
+    # components.append(gh_pusher)
 
     pusher_args["custom_config"] = hf_model_release_args
     hf_model_pusher = HFModelPusher(**pusher_args).with_id("HFModelPusher")
