@@ -3,35 +3,13 @@ from huggingface_hub import snapshot_download
 from tensorflow import keras
 from tensorflow.keras.applications import resnet50
 
+model_path = snapshot_download(repo_id="$MODEL_REPO_ID", revision="$MODEL_VERSION")
+model = keras.models.load_model(model_path)
+labels = []
 
-def load_model(tar_file: str = "outputs/model.tar.gz"):
-    tar_file = tarfile.open(tar_file)
-    tar_file.extractall(".")
-    tar_file.close()
-
-    model_path = "model"
-    return keras.models.load_model(model_path)
-
-
-filepath = hf_hub_download(
-    repo_id="$MODEL_REPO_ID",
-    filename="outputs/model.tar.gz",
-    force_filename="model.tar.gz",
-)
-model = load_model(tar_file=filepath)
-labels = [
-    "airplane",
-    "automobile",
-    "bird",
-    "cat",
-    "deer",
-    "dog",
-    "frog",
-    "horse",
-    "ship",
-    "truck",
-]
-
+with open(r"labels.txt", "r") as fp:
+    for line in fp:
+        labels.append(line[:-1])
 
 def classify_image(inp):
     inp = inp.reshape((-1, 224, 224, 3))
@@ -41,10 +19,9 @@ def classify_image(inp):
     confidences = {labels[i]: float(prediction[i]) for i in range(10)}
     return confidences
 
-
 iface = gr.Interface(
     fn=classify_image,
     inputs=gr.inputs.Image(shape=(224, 224)),
     outputs=gr.outputs.Label(num_top_classes=3),
-).launch()
+)
 iface.launch()
