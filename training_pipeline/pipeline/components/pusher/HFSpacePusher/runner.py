@@ -33,16 +33,19 @@ def release_model_for_hf_space(
     app_path = app_path.replace(".", "/")
 
     placeholder_to_replace = {
-        constants.MODEL_HUB_REPO_PLACEHOLDER_KEY: model_repo_id,
-        constants.MODEL_HUB_URL_PLACEHOLDER_KEY: model_repo_url,
-        constants.MODEL_VERSION_KEY: model_version,
+        hf_release_args[constants.MODEL_HUB_REPO_PLACEHOLDER_KEY]: model_repo_id,
+        hf_release_args[constants.MODEL_HUB_URL_PLACEHOLDER_KEY]: model_repo_url,
+        hf_release_args[constants.MODEL_VERSION_KEY]: model_version,
     }
 
     replace_placeholders_in_files(app_path, placeholder_to_replace)
 
     try:
         HfApi().create_repo(
-            token=access_token, repo_id=space_repo_id, repo_type=repo_type, space_sdk="gradio"
+            token=access_token,
+            repo_id=space_repo_id,
+            repo_type=repo_type,
+            space_sdk="gradio",
         )
     except HTTPError:
         logging.warning(f"{space_repo_id} repository may already exist")
