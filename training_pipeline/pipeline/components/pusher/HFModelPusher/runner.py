@@ -1,8 +1,6 @@
 from typing import Any, Dict
 
 import os
-import tarfile
-import time
 from absl import logging
 
 import tensorflow as tf
@@ -18,7 +16,7 @@ def release_model_for_hf_model(
     model_path: str,
     model_version_name: str,
     hf_release_args: Dict[str, Any],
-) -> str:
+):
     access_token = hf_release_args[constants.ACCESS_TOKEN_KEY]
 
     username = hf_release_args[constants.USERNAME_KEY]
