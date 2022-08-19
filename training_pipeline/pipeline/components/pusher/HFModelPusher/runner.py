@@ -59,19 +59,19 @@ def release_model_for_hf_model(
 
     try:
         HfApi().create_repo(
-            token=access_token, repo_id=f"{repo_id}-model", repo_type=repo_type
+            token=access_token, repo_id=repo_id, repo_type=repo_type
         )
     except HTTPError:
         logging.warning(f"{repo_id}-model repository may already exist")
         pass
 
     repository = Repository(
-        local_dir=repo_id, clone_from=repo_url, use_auth_token=access_token
+        local_dir="hf-model-repo/", clone_from=repo_url, use_auth_token=access_token
     )
 
     repository.git_checkout(revision={model_version_name}, create_branch_ok=True)
 
-    dummy_filepath = f"{username}/{reponame}/{model_version_name}"
+    dummy_filepath = f"hf-model-repo/{model_version_name}"
     open(dummy_filepath, mode="w", encoding="utf-8").close()
 
     repository.git_add(pattern=".")
