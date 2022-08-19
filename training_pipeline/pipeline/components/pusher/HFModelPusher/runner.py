@@ -58,9 +58,7 @@ def release_model_for_hf_model(
     model_path = root_dir
 
     try:
-        HfApi().create_repo(
-            token=access_token, repo_id=repo_id, repo_type=repo_type
-        )
+        HfApi().create_repo(token=access_token, repo_id=repo_id, repo_type=repo_type)
     except HTTPError:
         logging.warning(f"{repo_id}-model repository may already exist")
         pass
@@ -69,7 +67,7 @@ def release_model_for_hf_model(
         local_dir="hf-model-repo/", clone_from=repo_url, use_auth_token=access_token
     )
 
-    repository.git_checkout(revision={model_version_name}, create_branch_ok=True)
+    repository.git_checkout(revision=model_version_name, create_branch_ok=True)
 
     dummy_filepath = f"hf-model-repo/{model_version_name}"
     open(dummy_filepath, mode="w", encoding="utf-8").close()
@@ -80,7 +78,7 @@ def release_model_for_hf_model(
 
     try:
         HfApi().upload_folder(
-            repo_id=f"{repo_id}",
+            repo_id=repo_id,
             folder_path=model_path,
             path_in_repo=".",
             token=access_token,
@@ -93,4 +91,4 @@ def release_model_for_hf_model(
     except HTTPError as error:
         logging.warning(error)
 
-    return (f"{repo_id}", repo_url)
+    return (repo_id, repo_url)
