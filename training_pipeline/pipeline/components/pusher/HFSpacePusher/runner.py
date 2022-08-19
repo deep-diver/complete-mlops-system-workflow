@@ -35,7 +35,7 @@ def release_model_for_hf_space(
     placeholder_to_replace = {
         hf_release_args[constants.MODEL_HUB_REPO_PLACEHOLDER_KEY]: model_repo_id,
         hf_release_args[constants.MODEL_HUB_URL_PLACEHOLDER_KEY]: model_repo_url,
-        hf_release_args[constants.MODEL_VERSION_KEY]: model_version,
+        hf_release_args[constants.MODEL_VERSION_PLACEHOLDER_KEY]: model_version,
     }
 
     replace_placeholders_in_files(app_path, placeholder_to_replace)
