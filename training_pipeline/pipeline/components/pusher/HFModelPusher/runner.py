@@ -7,6 +7,7 @@ from absl import logging
 
 import tensorflow as tf
 
+from huggingface_hub import Repository
 from huggingface_hub import HfApi
 from requests.exceptions import HTTPError
 
@@ -22,12 +23,12 @@ def release_model_for_hf_model(
 
     username = hf_release_args[constants.USERNAME_KEY]
     reponame = hf_release_args[constants.REPONAME_KEY]
-    repo_id = f"{username}/{reponame}"
 
     repo_type = "model"
 
-    hf_api = HfApi()
-    hf_api.set_access_token(access_token)
+    repo_id = f"{username}/{reponame}-{repo_type}"
+    repo_url_prefix = "https://huggingface.co"
+    repo_url = f"{repo_url_prefix}/{repo_id}"
 
     logging.warning(f"model_path: {model_path}")
 
@@ -56,18 +57,30 @@ def release_model_for_hf_model(
 
     model_path = root_dir
 
-    hf_hub_path = ""
     try:
-        hf_api.create_repo(
+        HfApi().create_repo(
             token=access_token, repo_id=f"{repo_id}-model", repo_type=repo_type
         )
     except HTTPError:
         logging.warning(f"{repo_id}-model repository may already exist")
         pass
 
+    repository = Repository(
+        local_dir=repo_id, clone_from=repo_url, use_auth_token=access_token
+    )
+
+    repository.git_checkout(revision={model_version_name}, create_branch_ok=True)
+
+    dummy_filepath = f"{username}/{reponame}/{model_version_name}"
+    open(dummy_filepath, mode="w", encoding="utf-8").close()
+
+    repository.git_add(pattern=".")
+    repository.git_commit(commit_message="add dummy data to create branch")
+    repository.git_push(upstream=f"origin {model_version_name}")
+
     try:
-        hf_hub_path = hf_api.upload_folder(
-            repo_id=f"{repo_id}-model",
+        HfApi().upload_folder(
+            repo_id=f"{repo_id}",
             folder_path=model_path,
             path_in_repo=".",
             token=access_token,
@@ -76,8 +89,8 @@ def release_model_for_hf_model(
             commit_message=model_version_name,
             revision=model_version_name,
         )
-        logging.warning(f"file is uploaded at {repo_id}-model")
+        logging.warning(f"file is uploaded at {repo_id}")
     except HTTPError as error:
         logging.warning(error)
 
-    return (f"{repo_id}-model", f"checkpoints/{model_version_name}", hf_hub_path)
+    return (f"{repo_id}", repo_url)
