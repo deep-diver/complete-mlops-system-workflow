@@ -19,9 +19,9 @@ from tfx import types
 
 # Keys for custom_config.
 _CUSTOM_CONFIG_KEY = "custom_config"
-_PUSHED_REPO_ID = "pushed_model_repo_id"
+_PUSHED_REPO_ID = "pushed_repo_id"
 _PUSHED_VERSION = "pushed_version"
-_PUSHED_REPO_URL = "pushed_model_repo_url"
+_PUSHED_REPO_URL = "pushed_repo_url"
 
 
 class Executor(base_executor.BaseExecutor):
