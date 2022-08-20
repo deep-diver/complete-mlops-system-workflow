@@ -4,7 +4,7 @@ import tfx.extensions.google_cloud_ai_platform.constants as vertex_const
 import tfx.extensions.google_cloud_ai_platform.trainer.executor as vertex_training_const
 import tfx.extensions.google_cloud_ai_platform.tuner.executor as vertex_tuner_const
 
-PIPELINE_NAME = "resnet50-tfx-pipeline-hf-model-revision-6"
+PIPELINE_NAME = "resnet50-tfx-pipeline-hf-space-18"
 
 try:
     import google.auth  # pylint: disable=g-import-not-at-top  # pytype: disable=import-error
@@ -30,6 +30,12 @@ PREPROCESSING_FN = "models.preprocessing.preprocessing_fn"
 TRAINING_FN = "models.model.run_fn"
 TUNER_FN = "models.model.tuner_fn"
 CLOUD_TUNER_FN = "models.model.tuner_fn"
+
+GRADIO_APP_PATH = "apps.gradio.img_classifier"
+MODEL_HUB_REPO_PLACEHOLDER = "$MODEL_REPO_ID"
+MODEL_HUB_URL_PLACEHOLDER = "$MODEL_REPO_URL"
+MODEL_VERSION_PLACEHOLDER = "$MODEL_VERSION"
+
 
 TRAIN_NUM_STEPS = 160
 EVAL_NUM_STEPS = 4
@@ -117,5 +123,17 @@ HF_MODEL_RELEASE_ARGS = {
         "ACCESS_TOKEN": "$HF_ACCESS_TOKEN",
         "USERNAME": "chansung",
         "REPONAME": PIPELINE_NAME,
+    }
+}
+
+HF_SPACE_RELEASE_ARGS = {
+    "HF_SPACE_RELEASE": {
+        "ACCESS_TOKEN": "$HF_ACCESS_TOKEN",
+        "USERNAME": "chansung",
+        "REPONAME": PIPELINE_NAME,
+        "APP_PATH": GRADIO_APP_PATH,
+        "MODEL_HUB_REPO_PLACEHOLDER": MODEL_HUB_REPO_PLACEHOLDER,
+        "MODEL_HUB_URL_PLACEHOLDER": MODEL_HUB_URL_PLACEHOLDER,
+        "MODEL_VERSION_PLACEHOLDER": MODEL_VERSION_PLACEHOLDER,
     }
 }
