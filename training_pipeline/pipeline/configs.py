@@ -4,7 +4,7 @@ import tfx.extensions.google_cloud_ai_platform.constants as vertex_const
 import tfx.extensions.google_cloud_ai_platform.trainer.executor as vertex_training_const
 import tfx.extensions.google_cloud_ai_platform.tuner.executor as vertex_tuner_const
 
-PIPELINE_NAME = "resnet50-tfx-pipeline-hf-space-17"
+PIPELINE_NAME = "resnet50-tfx-pipeline-hf-space-18"
 
 try:
     import google.auth  # pylint: disable=g-import-not-at-top  # pytype: disable=import-error
@@ -31,7 +31,7 @@ TRAINING_FN = "models.model.run_fn"
 TUNER_FN = "models.model.tuner_fn"
 CLOUD_TUNER_FN = "models.model.tuner_fn"
 
-GRADIO_APP_PATH = "apps.gradio"
+GRADIO_APP_PATH = "apps.gradio.img_classifier"
 MODEL_HUB_REPO_PLACEHOLDER = "$MODEL_REPO_ID"
 MODEL_HUB_URL_PLACEHOLDER = "$MODEL_REPO_URL"
 MODEL_VERSION_PLACEHOLDER = "$MODEL_VERSION"
