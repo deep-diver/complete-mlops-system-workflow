@@ -87,9 +87,7 @@ def release_model_for_hf_space(
             tf.io.gfile.copy(blob, f"{root_dir}/{blobname}", overwrite=True)
 
     repository.git_add(pattern=".", auto_lfs_track=True)
-    repository.git_commit(
-        commit_message=f"updload new version of the model {model_version}"
-    )
+    repository.git_commit(commit_message=f"updload {model_version} model")
     repository.git_push(upstream="origin main")
 
     return (space_repo_id, space_repo_url)
