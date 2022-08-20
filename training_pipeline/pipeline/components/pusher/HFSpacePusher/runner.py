@@ -57,7 +57,7 @@ def release_model_for_hf_space(
         use_auth_token=access_token,
         repo_type=repo_type,
     )
-    repository.git_checkout(revision=model_version, create_branch_ok=True)
+    # repository.git_checkout(revision=model_version, create_branch_ok=True)
 
     root_dir = "hf-space-repo"
     blobnames = tf.io.gfile.listdir(app_path)
@@ -87,8 +87,10 @@ def release_model_for_hf_space(
             tf.io.gfile.copy(blob, f"{root_dir}/{blobname}", overwrite=True)
 
     repository.git_add(pattern=".", auto_lfs_track=True)
-    repository.git_commit(commit_message="updload new version of the model")
-    repository.git_push(upstream=f"origin {model_version}")
+    repository.git_commit(
+        commit_message=f"updload new version of the model {model_version}"
+    )
+    repository.git_push(upstream="origin main")
 
     return (space_repo_id, space_repo_url)
 

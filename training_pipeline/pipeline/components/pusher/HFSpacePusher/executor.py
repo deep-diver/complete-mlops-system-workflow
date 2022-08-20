@@ -64,7 +64,7 @@ class Executor(base_executor.BaseExecutor):
         model_repo_url = pushed_hf_model.get_string_custom_property(_PUSHED_REPO_URL)
         model_version = pushed_hf_model.get_string_custom_property(_PUSHED_VERSION)
 
-        model_repo_id, space_url = runner.release_model_for_hf_space(
+        space_repo_id, space_url = runner.release_model_for_hf_space(
             model_repo_id=model_repo_id,
             model_repo_url=model_repo_url,
             model_version=model_version,
@@ -73,5 +73,4 @@ class Executor(base_executor.BaseExecutor):
 
         space_to_push.set_int_custom_property("pushed", 1)
         space_to_push.set_string_custom_property(_PUSHED_REPO_URL, space_url)
-        space_to_push.set_string_custom_property(_PUSHED_REPO_ID, model_repo_id)
-        space_to_push.set_string_custom_property(_PUSHED_VERSION, model_version)
+        space_to_push.set_string_custom_property(_PUSHED_REPO_ID, space_repo_id)
