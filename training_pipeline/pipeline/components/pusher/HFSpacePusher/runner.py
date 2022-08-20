@@ -55,6 +55,7 @@ def release_model_for_hf_space(
         local_dir="hf-space-repo/",
         clone_from=space_repo_url,
         use_auth_token=access_token,
+        repo_type=repo_type,
     )
     repository.git_checkout(revision=model_version, create_branch_ok=True)
 
