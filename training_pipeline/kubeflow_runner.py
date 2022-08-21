@@ -83,6 +83,7 @@ def run():
             gh_release_args=configs.GH_RELEASE_ARGS,
             hf_model_release_args=configs.HF_MODEL_RELEASE_ARGS,
             hf_space_release_args=configs.HF_SPACE_RELEASE_ARGS,
+            firebase_ml_args=configs.FIREBASE_ML_ARGS,
         )
     )
 

@@ -26,6 +26,9 @@ from tfx.extensions.google_cloud_ai_platform.tuner.component import Tuner as Ver
 from pipeline.components.pusher.GHReleasePusher.component import Pusher as GHPusher
 from pipeline.components.pusher.HFModelPusher.component import Pusher as HFModelPusher
 from pipeline.components.pusher.HFSpacePusher.component import Pusher as HFSpacePusher
+from pipeline.components.pusher.FirebasePublisher.component import (
+    Pusher as FirebasePublisher,
+)
 from tfx.components import Transform
 from tfx.dsl.components.common import resolver
 from tfx.dsl.experimental import latest_blessed_model_resolver
@@ -56,6 +59,7 @@ def create_pipeline(
     gh_release_args: Optional[Dict[Text, Any]] = None,
     hf_model_release_args: Optional[Dict[Text, Any]] = None,
     hf_space_release_args: Optional[Dict[Text, Any]] = None,
+    firebase_ml_args: Optional[Dict[Text, Any]] = None,
 ) -> tfx.dsl.Pipeline:
     components = []
 
@@ -153,8 +157,16 @@ def create_pipeline(
     pusher_args = {
         "model": trainer.outputs["model"],
         "model_blessing": evaluator.outputs["blessing"],
-        "custom_config": ai_platform_serving_args,
+        "custom_config": firebase_ml_args,
     }
+    pusher = FirebasePublisher(**pusher_args)
+    components.append(pusher)
+
+    # pusher_args = {
+    #     "model": trainer.outputs["model"],
+    #     "model_blessing": evaluator.outputs["blessing"],
+    #     "custom_config": ai_platform_serving_args,
+    # }
     # pusher = VertexPusher(**pusher_args)  # pylint: disable=unused-variable
     # components.append(pusher)
 
@@ -162,16 +174,16 @@ def create_pipeline(
     # gh_pusher = GHPusher(**pusher_args).with_id("GHReleasePusher")
     # components.append(gh_pusher)
 
-    pusher_args["custom_config"] = hf_model_release_args
-    hf_model_pusher = HFModelPusher(**pusher_args).with_id("HFModelPusher")
-    components.append(hf_model_pusher)
+    # pusher_args["custom_config"] = hf_model_release_args
+    # hf_model_pusher = HFModelPusher(**pusher_args).with_id("HFModelPusher")
+    # components.append(hf_model_pusher)
 
-    space_pusher_args = {
-        "model": hf_model_pusher.outputs["pushed_model"],
-        "custom_config": hf_space_release_args,
-    }
-    hf_space_pusher = HFSpacePusher(**space_pusher_args).with_id("HFSpacePusher")
-    components.append(hf_space_pusher)
+    # space_pusher_args = {
+    #     "model": hf_model_pusher.outputs["pushed_model"],
+    #     "custom_config": hf_space_release_args,
+    # }
+    # hf_space_pusher = HFSpacePusher(**space_pusher_args).with_id("HFSpacePusher")
+    # components.append(hf_space_pusher)
 
     return pipeline.Pipeline(
         pipeline_name=pipeline_name,

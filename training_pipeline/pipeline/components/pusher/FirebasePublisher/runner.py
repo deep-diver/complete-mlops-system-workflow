@@ -17,7 +17,7 @@ def deploy_model_for_firebase_ml(
     firebase_ml_args: Dict[str, Any],
 ):
     model_name = firebase_ml_args[constants.FIREBASE_ML_MODEL_NAME_KEY]
-    firebase_gcs_bucket = firebase_ml_args[constants.FIREBASE_GCS_BUCKET_KEY]
+    # firebase_gcs_bucket = firebase_ml_args[constants.FIREBASE_GCS_BUCKET_KEY]
     tags = firebase_ml_args[constants.FIREBASE_ML_MODEL_TAGS_KEY]
     tags.append(model_version_name)
 
