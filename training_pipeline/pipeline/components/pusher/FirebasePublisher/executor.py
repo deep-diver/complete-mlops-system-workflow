@@ -64,9 +64,9 @@ class Executor(tfx_pusher_executor.Executor):
                 "custom_config in execution properties needs to be a dict."
             )
 
-        gh_release_args = custom_config.get(constants.GH_RELEASE_KEY)
-        if not gh_release_args:
-            raise ValueError("'GH_RELEASE' is missing in 'custom_config'")
+        firebase_ml_args = custom_config.get(constants.FIREBASE_ML_KEY)
+        if not firebase_ml_args:
+            raise ValueError("'FIREBASE_ML' is missing in 'custom_config'")
         model_push = artifact_utils.get_single_instance(
             output_dict[standard_component_specs.PUSHED_MODEL_KEY]
         )
@@ -84,7 +84,13 @@ class Executor(tfx_pusher_executor.Executor):
         ):
             job_labels = telemetry_utils.make_labels_dict()
 
-        # model_name = f"v{int(time.time())}"
+        model_name = f"v{int(time.time())}"
+        runner.deploy_model_for_firebase_ml(
+            model_version_name=model_name,
+            serving_path=model_path,
+            firebase_ml_args=firebase_ml_args,
+        )
+
         # pushed_model_path = runner.release_model_for_github(
         #     model_path=model_path,
         #     model_version_name=model_name,

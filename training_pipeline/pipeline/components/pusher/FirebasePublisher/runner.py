@@ -10,65 +10,75 @@ import tensorflow as tf
 from pipeline.components.pusher.FirebasePublisher import constants
 
 
-def release_model_for_github(
-    model_path: str,
+def deploy_model_for_firebase_ml(
     model_version_name: str,
-    gh_release_args: Dict[str, Any],
-) -> str:
-    access_token = gh_release_args[constants.ACCESS_TOKEN_KEY]
+    serving_path: str,
+    firebase_ml_args: Dict[str, Any],
+):
+    gcs_bucket = firebase_ml_args[constants.FIREBASE_GCS_BUCKET_KEY]
 
-    username = gh_release_args[constants.USERNAME_KEY]
-    reponame = gh_release_args[constants.REPONAME_KEY]
-    repo_uri = f"{username}/{reponame}"
+    # model_uri = f"{pushed_model.uri}/model.tflite"
 
-    branch_name = gh_release_args[constants.BRANCH_KEY]
+    # assert model_uri.split("://")[0] == "gs"
+    # assert credential_uri.split("://")[0] == "gs"
 
-    model_archive = gh_release_args[constants.ASSETNAME_KEY]
+    # # create gcs client instance
+    # gcs_client = gcs_storage.Client()
 
-    gh = Github(access_token)
-    repo = gh.get_repo(repo_uri)
-    branch = repo.get_branch(branch_name)
+    # # get credential for firebase
+    # credential_gcs_bucket = credential_uri.split("//")[1].split("/")[0]
+    # credential_blob_path = "/".join(credential_uri.split("//")[1].split("/")[1:])
 
-    release = repo.create_git_release(
-        model_version_name,
-        f"model release {model_version_name}",
-        "",
-        draft=False,
-        prerelease=False,
-        target_commitish=branch,
-    )
+    # bucket = gcs_client.bucket(credential_gcs_bucket)
+    # blob = bucket.blob(credential_blob_path)
+    # blob.download_to_filename("credential.json")
+    # logging.info(f"download credential.json from {credential_uri} is completed")
 
-    logging.warning(f"model_path: {model_path}")
-    if model_path.startswith("gs://"):
-        logging.warning("download pushed model")
-        root_dir = "saved_model"
-        os.mkdir(root_dir)
+    # # get tflite model file
+    # tflite_gcs_bucket = model_uri.split("//")[1].split("/")[0]
+    # tflite_blob_path = "/".join(model_uri.split("//")[1].split("/")[1:])
 
-        blobnames = tf.io.gfile.listdir(model_path)
+    # bucket = gcs_client.bucket(tflite_gcs_bucket)
+    # blob = bucket.blob(tflite_blob_path)
+    # blob.download_to_filename("model.tflite")
+    # logging.info(f"download model.tflite from {model_uri} is completed")
 
-        for blobname in blobnames:
-            blob = f"{model_path}/{blobname}"
+    # firebase_admin.initialize_app(
+    #     credentials.Certificate("credential.json"),
+    #     options={"storageBucket": firebase_dest_gcs_bucket},
+    # )
+    # logging.info("firebase_admin initialize app is completed")
 
-            if tf.io.gfile.isdir(blob):
-                sub_dir = f"{root_dir}/{blobname}"
-                os.mkdir(sub_dir)
+    # model_list = ml.list_models(list_filter=f"display_name={model_display_name}")
+    # # update
+    # if len(model_list.models) > 0:
+    #     # get the first match model
+    #     model = model_list.models[0]
+    #     source = ml.TFLiteGCSModelSource.from_tflite_model_file("model.tflite")
+    #     model.model_format = ml.TFLiteFormat(model_source=source)
 
-                sub_blobnames = tf.io.gfile.listdir(blob)
-                for sub_blobname in sub_blobnames:
-                    sub_blob = f"{blob}{sub_blobname}"
+    #     updated_model = ml.update_model(model)
+    #     ml.publish_model(updated_model.model_id)
 
-                    logging.warning(f"{sub_dir}/{sub_blobname}")
-                    tf.io.gfile.copy(sub_blob, f"{sub_dir}{sub_blobname}")
-            else:
-                logging.warning(f"{root_dir}/{blobname}")
-                tf.io.gfile.copy(blob, f"{root_dir}/{blobname}")
+    #     logging.info("model exists, so update it in FireBase ML")
+    #     return {"result": "model updated"}
+    # # create
+    # else:
+    #     # load a tflite file and upload it to Cloud Storage
+    #     source = ml.TFLiteGCSModelSource.from_tflite_model_file("model.tflite")
 
-        model_path = root_dir
+    #     # create the model object
+    #     tflite_format = ml.TFLiteFormat(model_source=source)
+    #     model = ml.Model(
+    #         display_name=model_display_name,
+    #         tags=[model_tag],
+    #         model_format=tflite_format,
+    #     )
 
-    logging.warning("compress the model")
-    with tarfile.open(model_archive, "w:gz") as tar:
-        tar.add(model_path)
+    #     # Add the model to your Firebase project and publish it
+    #     new_model = ml.create_model(model)
+    #     ml.publish_model(new_model.model_id)
 
-    logging.warning("upload the model")
-    release.upload_asset(model_archive, name=model_archive)
-    return f"https://github.com/{username}/{reponame}/releases/tag/{model_version_name}"
+    #     logging.info("model doesn exists, so create one in FireBase ML")
+    #     return {"result": "model created"}
+    return ""
