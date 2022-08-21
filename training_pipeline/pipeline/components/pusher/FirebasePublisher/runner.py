@@ -63,7 +63,7 @@ def deploy_model_for_firebase_ml(
         ml.publish_model(new_model.model_id)
 
         logging.info("model doesn exists, so create one in FireBase ML")
-    return ""
+    return "firebase ml published"
 
 
 def _download_pushed_model(model_path: str, destination_path: str) -> Tuple[bool, str]:
