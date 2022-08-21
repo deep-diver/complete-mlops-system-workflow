@@ -6,3 +6,4 @@ PyGithub
 wget
 oauth2client
 huggingface-hub
+firebase-admin
