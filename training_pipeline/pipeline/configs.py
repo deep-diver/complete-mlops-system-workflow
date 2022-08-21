@@ -142,7 +142,7 @@ HF_SPACE_RELEASE_ARGS = {
 FIREBASE_ML_ARGS = {
     "FIREBASE_ML": {
         "FIREBASE_ML_MODEL_NAME": PIPELINE_NAME,
-        "FIREBASE_ML_MODEL_TAGS": [f"{tfx.__version__}"],
+        "FIREBASE_ML_MODEL_TAGS": [f"{tfx.__version__}".replace(".", "_")],
         "OPTIONS": {
             "projectId": "gcp-ml-172005",
             "serviceAccountId": "874401645461-compute@developer.gserviceaccount.com",

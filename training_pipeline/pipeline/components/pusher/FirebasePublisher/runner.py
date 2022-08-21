@@ -24,11 +24,6 @@ def deploy_model_for_firebase_ml(
 
     firebase_admin.initialize_app(options=options)
     logging.info("firebase_admin initialize app is completed")
-    # firebase_admin.initialize_app(
-    #     credentials.Certificate("credential.json"),
-    #     options={"storageBucket": firebase_dest_gcs_bucket},
-    # )
-    # logging.info("firebase_admin initialize app is completed")
 
     is_tfile, model_path = _download_pushed_model(model_path, "temp_model")
     if is_tfile:
