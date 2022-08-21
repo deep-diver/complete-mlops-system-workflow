@@ -6,3 +6,4 @@ keras-tuner
 PyGithub
 wget
 huggingface-hub
+firebase-admin
