@@ -24,7 +24,7 @@ PIPELINE_IMAGE = f"gcr.io/{GOOGLE_CLOUD_PROJECT}/{PIPELINE_NAME}"
 OUTPUT_DIR = os.path.join("gs://", GCS_BUCKET_NAME)
 PIPELINE_ROOT = os.path.join(OUTPUT_DIR, "tfx_pipeline_output", PIPELINE_NAME)
 DATA_PATH = f"gs://{GCS_BUCKET_NAME}/data/"
-FIREBASE_ML_PATH = os.path.join(PIPELINE_ROOT, "firebase_ml")
+FIREBASE_ML_PATH = "firebase_ml"
 
 
 PREPROCESSING_FN = "models.preprocessing.preprocessing_fn"
