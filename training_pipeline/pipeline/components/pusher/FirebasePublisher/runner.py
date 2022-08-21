@@ -17,13 +17,12 @@ def deploy_model_for_firebase_ml(
     firebase_ml_args: Dict[str, Any],
 ):
     model_name = firebase_ml_args[constants.FIREBASE_ML_MODEL_NAME_KEY]
-    firebase_gcs_bucket = firebase_ml_args[constants.FIREBASE_GCS_BUCKET_KEY]
     tags = firebase_ml_args[constants.FIREBASE_ML_MODEL_TAGS_KEY]
     tags.append(model_version_name)
 
-    is_tfile, model_path = _download_pushed_model(model_path, "temp_model")
+    options = firebase_ml_args[constants.OPTIONS_KEY]
 
-    firebase_admin.initialize_app(options={"storageBucket": firebase_gcs_bucket})
+    firebase_admin.initialize_app(options=options)
     logging.info("firebase_admin initialize app is completed")
     # firebase_admin.initialize_app(
     #     credentials.Certificate("credential.json"),
@@ -31,6 +30,7 @@ def deploy_model_for_firebase_ml(
     # )
     # logging.info("firebase_admin initialize app is completed")
 
+    is_tfile, model_path = _download_pushed_model(model_path, "temp_model")
     if is_tfile:
         source = ml.TFLiteGCSModelSource.from_tflite_model_file(model_path)
     else:

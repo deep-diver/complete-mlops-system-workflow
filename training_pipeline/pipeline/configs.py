@@ -143,6 +143,10 @@ FIREBASE_ML_ARGS = {
     "FIREBASE_ML": {
         "FIREBASE_ML_MODEL_NAME": PIPELINE_NAME,
         "FIREBASE_ML_MODEL_TAGS": [f"{tfx.__version__}"],
-        "FIREBASE_GCS_BUCKET": FIREBASE_ML_PATH,
+        "OPTIONS": {
+            "projectId": "gcp-ml-172005",
+            "serviceAccountId": "874401645461-compute@developer.gserviceaccount.com",
+            "storageBucket": FIREBASE_ML_PATH,
+        },
     }
 }
