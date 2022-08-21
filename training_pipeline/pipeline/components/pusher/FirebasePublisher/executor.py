@@ -87,7 +87,7 @@ class Executor(tfx_pusher_executor.Executor):
         model_name = f"v{int(time.time())}"
         runner.deploy_model_for_firebase_ml(
             model_version_name=model_name,
-            serving_path=model_path,
+            model_path=model_path,
             firebase_ml_args=firebase_ml_args,
         )
 
