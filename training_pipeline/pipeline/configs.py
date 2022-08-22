@@ -145,7 +145,7 @@ FIREBASE_ML_ARGS = {
         "FIREBASE_ML_MODEL_TAGS": [f"{tfx.__version__}".replace(".", "_")],
         "OPTIONS": {
             "projectId": "gcp-ml-172005",
-            "serviceAccountId": "874401645461-compute@developer.gserviceaccount.com",
+            "serviceAccountId": "116310003867327845866",
             "storageBucket": FIREBASE_ML_PATH,
         },
     }
