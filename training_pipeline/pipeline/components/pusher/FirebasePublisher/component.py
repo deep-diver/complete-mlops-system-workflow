@@ -36,6 +36,7 @@ class FirebasePublisherSpec(types.ComponentSpec):
 class FirebasePublisher(types.ComponentSpec):
     """Component for pushing model to Firebase ML"""
 
+    SPEC_CLASS = FirebasePublisherSpec
     EXECUTOR_SPEC = executor_spec.ExecutorClassSpec(executor.Executor)
 
     def __init__(
