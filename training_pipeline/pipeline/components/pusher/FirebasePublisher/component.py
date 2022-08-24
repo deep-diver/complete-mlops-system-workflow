@@ -5,7 +5,7 @@ from tfx.types import standard_artifacts
 from tfx.types.component_spec import ChannelParameter, ExecutionParameter
 from tfx.dsl.components.base import executor_spec
 
-from training_pipeline.pipeline.components.pusher.FirebasePublisher import executor
+from pipeline.components.pusher.FirebasePublisher import executor
 
 MODEL_KEY = "model"
 PUSHED_MODEL_KEY = "pushed_model"
