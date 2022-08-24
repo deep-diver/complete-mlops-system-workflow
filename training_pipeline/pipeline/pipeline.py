@@ -26,9 +26,7 @@ from tfx.extensions.google_cloud_ai_platform.tuner.component import Tuner as Ver
 from pipeline.components.pusher.GHReleasePusher.component import Pusher as GHPusher
 from pipeline.components.pusher.HFModelPusher.component import Pusher as HFModelPusher
 from pipeline.components.pusher.HFSpacePusher.component import Pusher as HFSpacePusher
-from pipeline.components.pusher.FirebasePublisher.component import (
-    Pusher as FirebasePublisher,
-)
+from pipeline.components.pusher.FirebasePublisher.component import FirebasePublisher
 from tfx.components import Transform
 from tfx.dsl.components.common import resolver
 from tfx.dsl.experimental import latest_blessed_model_resolver
