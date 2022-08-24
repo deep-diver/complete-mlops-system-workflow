@@ -3,7 +3,7 @@ from typing import Dict, Optional, List
 from tfx import types
 from tfx.types import standard_artifacts
 from tfx.types.component_spec import ChannelParameter, ExecutionParameter
-from tfx.dsl.components.base import executor_spec
+from tfx.dsl.components.base import base_component, executor_spec
 
 from pipeline.components.pusher.FirebasePublisher import executor
 
@@ -33,7 +33,7 @@ class FirebasePublisherSpec(types.ComponentSpec):
     }
 
 
-class FirebasePublisher(types.ComponentSpec):
+class FirebasePublisher(base_component.BaseComponent):
     """Component for pushing model to Firebase ML"""
 
     SPEC_CLASS = FirebasePublisherSpec
