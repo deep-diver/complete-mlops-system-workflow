@@ -64,6 +64,8 @@ class FirebasePublisher(base_component.BaseComponent):
             options : additional configurations to be passed to initialize Firebase app
         """
 
+        pushed_model = types.Channel(type=standard_artifacts.PushedModel)
+
         spec = FirebasePublisherSpec(
             display_name=display_name,
             tags=tags,
@@ -71,7 +73,8 @@ class FirebasePublisher(base_component.BaseComponent):
             options=options,
             credential_path=credential_path,
             model=model,
-            model_blessing=model_blessing,            
+            model_blessing=model_blessing,
+            pushed_model=pushed_model
         )
 
 
