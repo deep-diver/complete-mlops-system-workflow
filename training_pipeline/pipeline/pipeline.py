@@ -144,13 +144,13 @@ def create_pipeline(
         ],
     )
 
-    # evaluator = Evaluator(
-    #     examples=transform.outputs["transformed_examples"],
-    #     model=trainer.outputs["model"],
-    #     baseline_model=model_resolver.outputs["model"],
-    #     eval_config=eval_config,
-    # )
-    # components.append(evaluator)
+    evaluator = Evaluator(
+        examples=transform.outputs["transformed_examples"],
+        model=trainer.outputs["model"],
+        baseline_model=model_resolver.outputs["model"],
+        eval_config=eval_config,
+    )
+    components.append(evaluator)
 
     # pusher_args = {
     #     "model": trainer.outputs["model"],
@@ -160,7 +160,9 @@ def create_pipeline(
     pusher = FirebasePublisher(
         display_name="test_display",
         storage_bucket="firebase_ml",
-        credential_path="gs://csp-credentials/firebase/firebase-credentials.json"
+        credential_path="gs://csp-credentials/firebase/firebase-credentials.json",
+        model=trainer.outputs["model"],
+        model_blessing=evaluator.outputs["blessing"],
     ).with_id("FirebasePublisher")
     components.append(pusher)
 
