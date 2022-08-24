@@ -1,38 +1,57 @@
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, List, Optional
 from absl import logging
 
-import tensorflow as tf
+import os
+import glob
+import tempfile
+from tfx.utils import io_utils
 
 import firebase_admin
 from firebase_admin import ml
-from firebase_admin import storage
 from firebase_admin import credentials
-
-from pipeline.components.pusher.FirebasePublisher import constants
 
 
 def deploy_model_for_firebase_ml(
-    model_version_name: str,
+    display_name: str,
+    storage_bucket: str,
+    tags: List[Any],
+    options: Dict[str, Any],
     model_path: str,
-    firebase_ml_args: Dict[str, Any],
-):
-    model_name = firebase_ml_args[constants.FIREBASE_ML_MODEL_NAME_KEY]
-    tags = firebase_ml_args[constants.FIREBASE_ML_MODEL_TAGS_KEY]
-    tags.append(model_version_name)
+    model_version: str,
+    credential_path: Optional[str],
+) -> str:
+    tmp_dir = tempfile.gettempdir()
+    credential = None
 
-    options = firebase_ml_args[constants.OPTIONS_KEY]
+    if credential_path is not None:
+        tmp_credential_path = os.path.join(tmp_dir, "credentials.json")
+        io_utils.copy_file(credential_path, tmp_credential_path)
+        credential = credentials.Certificate(tmp_credential_path)
+        logging.info(
+            "credentials are copied into a temporary directory in local filesystem"
+        )
 
-    firebase_admin.initialize_app(options=options)
-    logging.info("firebase_admin initialize app is completed")
+    options["storageBucket"] = storage_bucket
+    tags.append(model_version)
 
-    is_tfile, model_path = _download_pushed_model(model_path, "temp_model")
-    if is_tfile:
+    firebase_admin.initialize_app(credential=credential, options=options)
+    logging.info("firebase app initialization is completed")
+    
+    tmp_model_path = os.path.join(tmp_dir, "model")
+    io_utils.copy_dir(model_path, tmp_model_path)
+    
+    tflite_files = glob.glob(f"{tmp_model_path}/**/*.tflite")
+    is_tflite = len(tflite_files) > 0
+    model_path = tflite_files[0] if is_tflite else tmp_model_path
+    
+    if is_tflite:
         source = ml.TFLiteGCSModelSource.from_tflite_model_file(model_path)
     else:
         source = ml.TFLiteGCSModelSource.from_saved_model(model_path)
 
-    model_list = ml.list_models(list_filter=f"display_name={model_name}")
-    # update
+    model_list = ml.list_models(list_filter=f"display_name={display_name}")
+    
+    # update existing model
     if len(model_list.models) > 0:
         # get the first match model
         model = model_list.models[0]
@@ -42,13 +61,13 @@ def deploy_model_for_firebase_ml(
         updated_model = ml.update_model(model)
         ml.publish_model(updated_model.model_id)
 
-        logging.info("model exists, so update it in FireBase ML")
-    # create
+        logging.info("model exists, so it is updated")
+    # create a new model
     else:
         # create the model object
         tflite_format = ml.TFLiteFormat(model_source=source)
         model = ml.Model(
-            display_name=model_name,
+            display_name=display_name,
             tags=tags,
             model_format=tflite_format,
         )
@@ -57,40 +76,6 @@ def deploy_model_for_firebase_ml(
         new_model = ml.create_model(model)
         ml.publish_model(new_model.model_id)
 
-        logging.info("model doesn exists, so create one in FireBase ML")
-    return "firebase ml published"
+        logging.info("model didn't exist, so it is created")
 
-
-def _download_pushed_model(model_path: str, destination_path: str) -> Tuple[bool, str]:
-    is_tfile = False
-
-    logging.warning("download pushed model")
-    root_dir = destination_path  # "saved_model"
-
-    if not tf.io.gfile.exists(root_dir):
-        tf.io.gfile.mkdir(root_dir)
-
-    blobnames = tf.io.gfile.listdir(model_path)
-
-    for blobname in blobnames:
-        blob = f"{model_path}/{blobname}"
-
-        if tf.io.gfile.isdir(blob):
-            sub_dir = f"{root_dir}/{blobname}"
-            tf.io.gfile.mkdir(sub_dir)
-
-            sub_blobnames = tf.io.gfile.listdir(blob)
-            for sub_blobname in sub_blobnames:
-                sub_blob = f"{blob}{sub_blobname}"
-
-                logging.warning(f"{sub_dir}/{sub_blobname}")
-                tf.io.gfile.copy(sub_blob, f"{sub_dir}{sub_blobname}")
-        else:
-            logging.warning(f"{root_dir}/{blobname}")
-            tf.io.gfile.copy(blob, f"{root_dir}/{blobname}")
-
-            if "tflite" in blobname:
-                is_tfile = True
-                model_path = f"{root_dir}/{blobname}"
-
-    return (is_tfile, model_path)
+    return ""
