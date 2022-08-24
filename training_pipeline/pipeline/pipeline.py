@@ -159,7 +159,7 @@ def create_pipeline(
     # }
     pusher = FirebasePublisher(
         display_name="test_display",
-        storage_bucket="firebase_ml",
+        storage_bucket="gcp-ml-172005.appspot.com",
         credential_path="gs://csp-credentials/firebase/firebase-credentials.json",
         model=trainer.outputs["model"],
         model_blessing=evaluator.outputs["blessing"],
