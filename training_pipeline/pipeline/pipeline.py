@@ -159,7 +159,11 @@ def create_pipeline(
         # "model_blessing": evaluator.outputs["blessing"],
         "custom_config": firebase_ml_args,
     }
-    pusher = FirebasePublisher(**pusher_args).with_id("FirebasePublisher")
+    pusher = FirebasePublisher(
+        display_name="test_display",
+        storage_bucket="firebase_ml",
+        credential_path="gs://csp-credentials/firebase/firebase-credentials.json"
+    ).with_id("FirebasePublisher")
     components.append(pusher)
 
     # pusher_args = {

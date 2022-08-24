@@ -6,7 +6,7 @@ from tfx import types
 from tfx.types import artifact_utils, standard_component_specs
 
 from tfx.components.pusher import executor as tfx_pusher_executor
-from tfx_addons.firebase_publisher import runner
+from pipeline.components.pusher.FirebasePublisher import runner
 
 _DISPLAY_NAME_KEY = "display_name"
 _STORAGE_BUCKET_KEY = "storage_bucket"
