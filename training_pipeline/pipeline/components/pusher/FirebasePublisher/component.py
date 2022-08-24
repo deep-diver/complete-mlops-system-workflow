@@ -63,12 +63,16 @@ class FirebasePublisher(base_component.BaseComponent):
                 If this parameter is not given, Application Default Credentials will be used in GCP environment
             options : additional configurations to be passed to initialize Firebase app
         """
-        super().__init__(
+
+        spec = FirebasePublisherSpec(
             display_name=display_name,
             tags=tags,
             storage_bucket=storage_bucket,
             options=options,
             credential_path=credential_path,
             model=model,
-            model_blessing=model_blessing,
+            model_blessing=model_blessing,            
         )
+
+
+        super().__init__(spec=spec)

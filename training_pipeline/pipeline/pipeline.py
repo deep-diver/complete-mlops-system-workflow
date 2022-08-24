@@ -152,11 +152,11 @@ def create_pipeline(
     # )
     # components.append(evaluator)
 
-    pusher_args = {
-        "model": trainer.outputs["model"],
-        # "model_blessing": evaluator.outputs["blessing"],
-        "custom_config": firebase_ml_args,
-    }
+    # pusher_args = {
+    #     "model": trainer.outputs["model"],
+    #     # "model_blessing": evaluator.outputs["blessing"],
+    #     "custom_config": firebase_ml_args,
+    # }
     pusher = FirebasePublisher(
         display_name="test_display",
         storage_bucket="firebase_ml",
