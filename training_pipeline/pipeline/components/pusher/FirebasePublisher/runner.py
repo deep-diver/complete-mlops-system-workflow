@@ -43,16 +43,16 @@ def deploy_model_for_firebase_ml(
     tflite_files = glob.glob(f"{tmp_model_path}/**/*.tflite")
     is_tflite = len(tflite_files) > 0
     model_path = tflite_files[0] if is_tflite else tmp_model_path
-    
-    if is_tflite:
-        source = ml.TFLiteGCSModelSource.from_tflite_model_file(model_path)
-    else:
-        source = ml.TFLiteGCSModelSource.from_saved_model(model_path)
 
     model_list = ml.list_models(list_filter=f"display_name={display_name}")
     
     # update existing model
     if len(model_list.models) > 0:
+        if is_tflite:
+            source = ml.TFLiteGCSModelSource.from_tflite_model_file(model_path)
+        else:
+            source = ml.TFLiteGCSModelSource.from_saved_model(model_path)
+
         # get the first match model
         model = model_list.models[0]
         model.tags = tags
@@ -64,6 +64,11 @@ def deploy_model_for_firebase_ml(
         logging.info("model exists, so it is updated")
     # create a new model
     else:
+        if is_tflite:
+            source = ml.TFLiteGCSModelSource.from_tflite_model_file(model_path)
+        else:
+            source = ml.TFLiteGCSModelSource.from_saved_model(model_path)
+
         # create the model object
         tflite_format = ml.TFLiteFormat(model_source=source)
         model = ml.Model(
