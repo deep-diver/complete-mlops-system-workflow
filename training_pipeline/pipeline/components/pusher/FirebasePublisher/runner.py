@@ -108,11 +108,11 @@ def deploy_model_for_firebase_ml(
     model_version: str,
     credential_path: str,
 ) -> str:
-    model_list = ml.list_models(list_filter=f"display_name={display_name}")
-
     tmp_model_path = _prepare_fb_download_model(credential_path, storage_bucket,
                                                 model_path, options)
     
+    model_list = ml.list_models(list_filter=f"display_name={display_name}")
+
     is_tflite, model_path = _get_model_path_and_type(tmp_model_path)
     source = _upload_model(is_tflite, model_path)
 
