@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 from absl import logging
 
 import os
@@ -39,7 +39,7 @@ def _prepare_fb_download_model(credential_path: str, storage_bucket: str,
     
     return tmp_model_path
 
-def _get_model_path_and_type(tmp_model_path) -> tuple[bool, str]:
+def _get_model_path_and_type(tmp_model_path) -> Tuple[bool, str]:
     tflite_files = glob.glob(f"{tmp_model_path}/**/*.tflite")
     is_tflite = len(tflite_files) > 0
     model_path = tflite_files[0] if is_tflite else tmp_model_path
