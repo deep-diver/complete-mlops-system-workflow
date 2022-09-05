@@ -87,17 +87,17 @@ def create_pipeline(
     # )
     # components.append(tuner)
 
-    # trainer_args = {
-    #     "run_fn": modules["training_fn"],
-    #     "transformed_examples": transform.outputs["transformed_examples"],
-    #     "schema": schema_gen.outputs["schema"],
-    #     "hyperparameters": tuner.outputs["best_hyperparameters"],
-    #     "transform_graph": transform.outputs["transform_graph"],
-    #     "train_args": train_args,
-    #     "eval_args": eval_args,
-    # }
-    # trainer = Trainer(**trainer_args)
-    # components.append(trainer)
+    trainer_args = {
+        "run_fn": modules["training_fn"],
+        "transformed_examples": transform.outputs["transformed_examples"],
+        "schema": schema_gen.outputs["schema"],
+        # "hyperparameters": tuner.outputs["best_hyperparameters"],
+        "transform_graph": transform.outputs["transform_graph"],
+        "train_args": train_args,
+        "eval_args": eval_args,
+    }
+    trainer = Trainer(**trainer_args)
+    components.append(trainer)
 
     # model_resolver = resolver.Resolver(
     #     strategy_class=latest_blessed_model_resolver.LatestBlessedModelResolver,
