@@ -10,6 +10,7 @@ _LABEL_SHAPE_KEY = "label_shape"
 def _transformed_name(key: str) -> str:
     return key + "_xf"
 
+
 # output should have the same keys as inputs
 def preprocess(inputs):
     images = tf.reshape(inputs[_IMAGE_KEY], [1080, 1920, 3])
@@ -21,6 +22,7 @@ def preprocess(inputs):
         _LABEL_KEY: labels,
         _LABEL_SHAPE_KEY: inputs[_LABEL_SHAPE_KEY],
     }
+
 
 def preprocessing_fn(inputs):
     """tf.transform's callback function for preprocessing inputs.

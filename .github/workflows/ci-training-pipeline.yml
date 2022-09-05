@@ -1,4 +1,4 @@
-name: Validity Check for Training Pipeline
+name: CI - Img Classification - Training Pipeline
 
 on:
   push:
