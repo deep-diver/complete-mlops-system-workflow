@@ -94,7 +94,10 @@ def _input_fn(
     # dataset = dataset.map(_preprocess)
     return dataset
 
-def _build_keras_model(num_labels: int, hparams: keras_tuner.HyperParameters) -> tf.keras.Model:
+
+def _build_keras_model(
+    num_labels: int, hparams: keras_tuner.HyperParameters
+) -> tf.keras.Model:
     base_model = tf.keras.applications.MobileNetV2(
         input_shape=[128, 128, 3], include_top=False
     )
@@ -120,7 +123,9 @@ def _build_keras_model(num_labels: int, hparams: keras_tuner.HyperParameters) ->
         upsample(64, 3),  # 32x32 -> 64x64
     ]
 
-    inputs = tf.keras.layers.Input(shape=[128, 128, 3], name=_transformed_name(_IMAGE_KEY))
+    inputs = tf.keras.layers.Input(
+        shape=[128, 128, 3], name=_transformed_name(_IMAGE_KEY)
+    )
 
     # Downsampling through the model
     skips = down_stack(inputs)
@@ -220,6 +225,7 @@ def upsample(filters, size, norm_type="batchnorm", apply_dropout=False):
 
     return result
 
+
 def _get_hyperparameters() -> keras_tuner.HyperParameters:
     hp = keras_tuner.HyperParameters()
     hp.Choice("learning_rate", [1e-3, 1e-2], default=1e-3)
@@ -299,46 +305,46 @@ def _get_hyperparameters() -> keras_tuner.HyperParameters:
 #     )
 
 
-# def tuner_fn(fn_args: FnArgs) -> TunerFnResult:
-#     steps_per_epoch = int(_TRAIN_DATA_SIZE / _TRAIN_BATCH_SIZE)
+def tuner_fn(fn_args: FnArgs) -> TunerFnResult:
+    steps_per_epoch = _TRAIN_BATCH_SIZE  # int(_TRAIN_DATA_SIZE / _TRAIN_BATCH_SIZE)
 
-#     tuner = keras_tuner.RandomSearch(
-#         _build_keras_model,
-#         max_trials=6,
-#         hyperparameters=_get_hyperparameters(),
-#         allow_new_entries=False,
-#         objective=keras_tuner.Objective("val_sparse_categorical_accuracy", "max"),
-#         directory=fn_args.working_dir,
-#         project_name="img_classification_tuning",
-#     )
+    tuner = keras_tuner.RandomSearch(
+        _build_keras_model,
+        max_trials=6,
+        hyperparameters=_get_hyperparameters(),
+        allow_new_entries=False,
+        objective=keras_tuner.Objective("val_sparse_categorical_accuracy", "max"),
+        directory=fn_args.working_dir,
+        project_name="img_classification_tuning",
+    )
 
-#     tf_transform_output = tft.TFTransformOutput(fn_args.transform_graph_path)
+    tf_transform_output = tft.TFTransformOutput(fn_args.transform_graph_path)
 
-#     train_dataset = _input_fn(
-#         fn_args.train_files,
-#         fn_args.data_accessor,
-#         tf_transform_output,
-#         is_train=True,
-#         batch_size=_TRAIN_BATCH_SIZE,
-#     )
+    train_dataset = _input_fn(
+        fn_args.train_files,
+        fn_args.data_accessor,
+        tf_transform_output,
+        is_train=True,
+        batch_size=_TRAIN_BATCH_SIZE,
+    )
 
-#     eval_dataset = _input_fn(
-#         fn_args.eval_files,
-#         fn_args.data_accessor,
-#         tf_transform_output,
-#         is_train=False,
-#         batch_size=_EVAL_BATCH_SIZE,
-#     )
+    eval_dataset = _input_fn(
+        fn_args.eval_files,
+        fn_args.data_accessor,
+        tf_transform_output,
+        is_train=False,
+        batch_size=_EVAL_BATCH_SIZE,
+    )
 
-#     return TunerFnResult(
-#         tuner=tuner,
-#         fit_kwargs={
-#             "x": train_dataset,
-#             "validation_data": eval_dataset,
-#             "steps_per_epoch": steps_per_epoch,
-#             "validation_steps": fn_args.eval_steps,
-#         },
-#     )
+    return TunerFnResult(
+        tuner=tuner,
+        fit_kwargs={
+            "x": train_dataset,
+            "validation_data": eval_dataset,
+            "steps_per_epoch": steps_per_epoch,
+            "validation_steps": fn_args.eval_steps,
+        },
+    )
 
 
 def run_fn(fn_args: FnArgs):
