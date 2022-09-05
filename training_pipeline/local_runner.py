@@ -33,7 +33,7 @@ SERVING_MODEL_DIR = os.path.join(PIPELINE_ROOT, "serving_model")
 #       DATA_PATH. For example,
 #       DATA_PATH = 'gs://bucket/penguin/csv/'.
 # TODO(step 4): Specify the path for your data.
-DATA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data/img-classify")
+DATA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data/")
 
 
 def run():
