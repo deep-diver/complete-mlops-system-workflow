@@ -147,7 +147,7 @@ def _build_keras_model(hparams: keras_tuner.HyperParameters) -> tf.keras.Model:
     model.compile(
         optimizer=Adam(learning_rate=hparams.get("learning_rate")),
         loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-        metrics=["accuracy", "sparse_categorical_accuracy"],
+        metrics=["sparse_categorical_accuracy"],
     )
     return model
 
