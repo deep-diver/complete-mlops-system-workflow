@@ -95,9 +95,7 @@ def _input_fn(
     return dataset
 
 
-def _build_keras_model(
-    num_labels: int, hparams: keras_tuner.HyperParameters
-) -> tf.keras.Model:
+def _build_keras_model(hparams: keras_tuner.HyperParameters) -> tf.keras.Model:
     base_model = tf.keras.applications.MobileNetV2(
         input_shape=[128, 128, 3], include_top=False
     )
@@ -140,7 +138,7 @@ def _build_keras_model(
 
     # This is the last layer of the model
     last = tf.keras.layers.Conv2DTranspose(
-        filters=num_labels, kernel_size=3, strides=2, padding="same", name="labels"
+        filters=35, kernel_size=3, strides=2, padding="same", name="labels"
     )  # 64x64 -> 128x128
 
     x = last(x)
@@ -377,7 +375,7 @@ def run_fn(fn_args: FnArgs):
         hparams = _get_hyperparameters()
     INFO(f"HyperParameters for training: ${hparams.get_config()}")
 
-    model = _build_keras_model(35, hparams)
+    model = _build_keras_model(hparams)
     model.fit(
         train_dataset,
         epochs=_EPOCHS,
