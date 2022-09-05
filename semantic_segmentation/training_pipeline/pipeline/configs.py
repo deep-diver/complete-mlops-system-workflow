@@ -28,8 +28,8 @@ DATA_PATH = f"gs://{GCS_BUCKET_NAME}/data/"
 
 PREPROCESSING_FN = "models.preprocessing.preprocessing_fn"
 TRAINING_FN = "models.model.run_fn"
-TUNER_FN = "models.model.model.tuner_fn"
-CLOUD_TUNER_FN = "models.model.model.tuner_fn"
+TUNER_FN = "models.model.tuner_fn"
+CLOUD_TUNER_FN = "models.model.tuner_fn"
 
 GRADIO_APP_PATH = "apps.gradio.semantic_seg"
 MODEL_HUB_REPO_PLACEHOLDER = "$MODEL_REPO_ID"
