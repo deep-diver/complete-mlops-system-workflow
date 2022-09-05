@@ -147,7 +147,7 @@ def _build_keras_model(hparams: keras_tuner.HyperParameters) -> tf.keras.Model:
     model.compile(
         optimizer=Adam(learning_rate=hparams.get("learning_rate")),
         loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-        metrics=["accuracy"],
+        metrics=["accuracy", "sparse_categorical_accuracy"],
     )
     return model
 
@@ -311,7 +311,7 @@ def tuner_fn(fn_args: FnArgs) -> TunerFnResult:
         max_trials=6,
         hyperparameters=_get_hyperparameters(),
         allow_new_entries=False,
-        objective=keras_tuner.Objective("val_accuracy", "max"),
+        objective=keras_tuner.Objective("val_sparse_categorical_accuracy", "max"),
         directory=fn_args.working_dir,
         project_name="img_classification_tuning",
     )

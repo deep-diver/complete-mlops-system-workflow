@@ -115,7 +115,7 @@ def create_pipeline(
             tfma.MetricsSpec(
                 metrics=[
                     tfma.MetricConfig(
-                        class_name="Accuracy",
+                        class_name="SparseCategoricalAccuracy",
                         threshold=tfma.MetricThreshold(
                             value_threshold=tfma.GenericValueThreshold(
                                 lower_bound={"value": 0.55}
@@ -143,7 +143,7 @@ def create_pipeline(
 
     pusher_args = {
         "model": trainer.outputs["model"],
-        "model_blessing": evaluator.outputs["blessing"],
+        # "model_blessing": evaluator.outputs["blessing"],
         "push_destination": tfx.proto.PushDestination(
             filesystem=tfx.proto.PushDestination.Filesystem(
                 base_directory=serving_model_dir
