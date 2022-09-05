@@ -21,7 +21,7 @@ on:
         default: '[12]'    
     
 jobs:
-  cd:
+  cd-img-clf:
     runs-on: ubuntu-latest
   
     permissions:

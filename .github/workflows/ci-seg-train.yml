@@ -1,4 +1,4 @@
-name: Validity Check for Training Pipeline
+name: CI - Semantic Seg - Training Pipeline
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
   pull_request:      
 
 jobs:
-  ci-img-clf:
+  ci-seg:
     runs-on: ubuntu-latest
   
     steps:
@@ -20,7 +20,7 @@ jobs:
       with:
           filters: |
               src:
-                - 'training_pipeline/**'
+                - 'semantic_segmentation/training_pipeline/**'
 
     - uses: actions/setup-python@v4
       if: steps.training-pipeline-change.outputs.src == 'true'
@@ -28,7 +28,7 @@ jobs:
         python-version: '3.8'
         
     - name: 'Install required Python packages'
-      if: steps.training-pipeline-change.outputs.src == 'true'    
+      if: steps.training-pipeline-change.outputs.src == 'true'
       run: |
         pip install -r requirements.txt
 
@@ -40,7 +40,7 @@ jobs:
 
     - name: 'Compile TFX Training Pipeline'
       if: steps.training-pipeline-change.outputs.src == 'true'    
-      working-directory: 'training_pipeline'
+      working-directory: 'semantic_segmentation/training_pipeline'
       run: |
         tfx pipeline compile \
           --pipeline-path kubeflow_runner.py \
@@ -48,7 +48,7 @@ jobs:
           
     - name: 'Create TFX Training Pipeline'
       if: steps.training-pipeline-change.outputs.src == 'true'    
-      working-directory: 'training_pipeline'
+      working-directory: 'semantic_segmentation/training_pipeline'
       run: |
         tfx pipeline create \
           --pipeline-path kubeflow_runner.py \
