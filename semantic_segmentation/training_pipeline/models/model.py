@@ -51,7 +51,9 @@ def _get_signature(model):
 def _get_serve_image_fn(model):
     @tf.function
     def serve_image_fn(image_tensor):
-        return model(image_tensor)
+        logits = model(image_tensor)
+        pred_mask = tf.math.argmax(logits, axis=-1)
+        return pred_mask
 
     return serve_image_fn
 
