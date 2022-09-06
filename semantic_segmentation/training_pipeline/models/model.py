@@ -1,5 +1,3 @@
-import datetime
-import os
 from typing import List
 import absl
 import keras_tuner
@@ -7,11 +5,9 @@ import tensorflow as tf
 from tensorflow.keras.optimizers import Adam
 import tensorflow_transform as tft
 
-from tensorflow_cloud import CloudTuner
 from tfx.v1.components import TunerFnResult
 from tfx.components.trainer.fn_args_utils import DataAccessor
 from tfx.components.trainer.fn_args_utils import FnArgs
-from tfx.dsl.io import fileio
 from tfx_bsl.tfxio import dataset_options
 import tfx.extensions.google_cloud_ai_platform.constants as vertex_const
 import tfx.extensions.google_cloud_ai_platform.trainer.executor as vertex_training_const
@@ -230,80 +226,6 @@ def _get_hyperparameters() -> keras_tuner.HyperParameters:
     hp = keras_tuner.HyperParameters()
     hp.Choice("learning_rate", [1e-3, 1e-2], default=1e-3)
     return hp
-
-
-# def _build_keras_model(hparams: keras_tuner.HyperParameters) -> tf.keras.Model:
-#     base_model = tf.keras.applications.ResNet50(
-#         input_shape=(224, 224, 3), include_top=False, weights="imagenet", pooling="max"
-#     )
-#     base_model.input_spec = None
-#     base_model.trainable = False
-
-#     model = tf.keras.Sequential(
-#         [
-#             tf.keras.layers.InputLayer(
-#                 input_shape=(224, 224, 3), name=_transformed_name(_IMAGE_KEY)
-#             ),
-#             base_model,
-#             tf.keras.layers.Dropout(0.1),
-#             tf.keras.layers.Dense(10, activation="softmax"),
-#         ]
-#     )
-
-#     model.compile(
-#         loss="sparse_categorical_crossentropy",
-#         optimizer=Adam(learning_rate=hparams.get("learning_rate")),
-#         metrics=["sparse_categorical_accuracy"],
-#     )
-#     model.summary(print_fn=INFO)
-
-#     return model
-
-
-# def cloud_tuner_fn(fn_args: FnArgs) -> TunerFnResult:
-#     TUNING_ARGS_KEY = vertex_tuner_const.TUNING_ARGS_KEY
-#     TRAINING_ARGS_KEY = vertex_training_const.TRAINING_ARGS_KEY
-#     VERTEX_PROJECT_KEY = "project"
-#     VERTEX_REGION_KEY = "region"
-
-#     tuner = CloudTuner(
-#         _build_keras_model,
-#         max_trials=6,
-#         hyperparameters=_get_hyperparameters(),
-#         project_id=fn_args.custom_config[TUNING_ARGS_KEY][VERTEX_PROJECT_KEY],
-#         region=fn_args.custom_config[TUNING_ARGS_KEY][VERTEX_REGION_KEY],
-#         objective="val_sparse_categorical_accuracy",
-#         directory=fn_args.working_dir,
-#     )
-
-#     tf_transform_output = tft.TFTransformOutput(fn_args.transform_graph_path)
-
-#     train_dataset = _input_fn(
-#         fn_args.train_files,
-#         fn_args.data_accessor,
-#         tf_transform_output,
-#         is_train=True,
-#         batch_size=_TRAIN_BATCH_SIZE,
-#     )
-
-#     eval_dataset = _input_fn(
-#         fn_args.eval_files,
-#         fn_args.data_accessor,
-#         tf_transform_output,
-#         is_train=False,
-#         batch_size=_EVAL_BATCH_SIZE,
-#     )
-
-#     return TunerFnResult(
-#         tuner=tuner,
-#         fit_kwargs={
-#             "x": train_dataset,
-#             "validation_data": eval_dataset,
-#             "steps_per_epoch": steps_per_epoch,
-#             "validation_steps": fn_args.eval_steps,
-#         },
-#     )
-
 
 def tuner_fn(fn_args: FnArgs) -> TunerFnResult:
     steps_per_epoch = _TRAIN_BATCH_SIZE  # int(_TRAIN_DATA_SIZE / _TRAIN_BATCH_SIZE)
