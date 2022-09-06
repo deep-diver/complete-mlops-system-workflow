@@ -1,4 +1,4 @@
-name: Trigger Training Pipeline
+name: CD - Semantic Seg - Training Pipeline
 
 on:
   workflow_dispatch:
@@ -14,7 +14,7 @@ on:
       pipelineName:
         description: 'TFX Pipeline Name to Trigger'
         required: true
-        default: 'resnet50-tfx-pipeline-hf-space-18'
+        default: 'sidewalk-semantic-seg-pipeline'
       spanPattern:
         description: 'Span Numbers (regex)'
         required: true
@@ -60,7 +60,7 @@ jobs:
         gcloud --quiet auth configure-docker
 
     - name: 'Replace Access Token Placeholder'
-      working-directory: 'training_pipeline'
+      working-directory: 'semantic_segmentation'
       env: 
         GH_ACCESS_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
         HF_ACCESS_TOKEN: ${{ secrets.HF_ACCESS_TOKEN }}
@@ -70,14 +70,14 @@ jobs:
         cat pipeline/configs.py
 
     - name: 'Compile TFX Training Pipeline'
-      working-directory: 'training_pipeline'
+      working-directory: 'semantic_segmentation'
       run: |
         tfx pipeline compile \
           --pipeline-path kubeflow_runner.py \
           --engine vertex
           
     - name: 'Create TFX Training Pipeline'
-      working-directory: 'training_pipeline'
+      working-directory: 'semantic_segmentation'
       run: |
         tfx pipeline create \
           --pipeline-path kubeflow_runner.py \
@@ -85,7 +85,7 @@ jobs:
           --build-image
           
     - name: 'Run TFX Training Pipeline'
-      working-directory: 'training_pipeline'
+      working-directory: 'semantic_segmentation'
       run: |
           tfx run create \
             --engine vertex \
