@@ -108,70 +108,70 @@ def create_pipeline(
     trainer = VertexTrainer(**trainer_args)
     components.append(trainer)
 
-    model_resolver = resolver.Resolver(
-        strategy_class=latest_blessed_model_resolver.LatestBlessedModelResolver,
-        model=Channel(type=Model),
-        model_blessing=Channel(type=ModelBlessing),
-    ).with_id("latest_blessed_model_resolver")
-    components.append(model_resolver)
+    # model_resolver = resolver.Resolver(
+    #     strategy_class=latest_blessed_model_resolver.LatestBlessedModelResolver,
+    #     model=Channel(type=Model),
+    #     model_blessing=Channel(type=ModelBlessing),
+    # ).with_id("latest_blessed_model_resolver")
+    # components.append(model_resolver)
 
-    # Uses TFMA to compute evaluation statistics over features of a model and
-    # perform quality validation of a candidate model (compare to a baseline).
-    eval_config = tfma.EvalConfig(
-        model_specs=[tfma.ModelSpec(label_key="label_xf", prediction_key="label_xf")],
-        slicing_specs=[tfma.SlicingSpec()],
-        metrics_specs=[
-            tfma.MetricsSpec(
-                metrics=[
-                    tfma.MetricConfig(
-                        class_name="SparseCategoricalAccuracy",
-                        threshold=tfma.MetricThreshold(
-                            value_threshold=tfma.GenericValueThreshold(
-                                lower_bound={"value": 0.55}
-                            ),
-                            # Change threshold will be ignored if there is no
-                            # baseline model resolved from MLMD (first run).
-                            change_threshold=tfma.GenericChangeThreshold(
-                                direction=tfma.MetricDirection.HIGHER_IS_BETTER,
-                                absolute={"value": -1e-3},
-                            ),
-                        ),
-                    )
-                ]
-            )
-        ],
-    )
+    # # Uses TFMA to compute evaluation statistics over features of a model and
+    # # perform quality validation of a candidate model (compare to a baseline).
+    # eval_config = tfma.EvalConfig(
+    #     model_specs=[tfma.ModelSpec(label_key="label_xf", prediction_key="label_xf")],
+    #     slicing_specs=[tfma.SlicingSpec()],
+    #     metrics_specs=[
+    #         tfma.MetricsSpec(
+    #             metrics=[
+    #                 tfma.MetricConfig(
+    #                     class_name="SparseCategoricalAccuracy",
+    #                     threshold=tfma.MetricThreshold(
+    #                         value_threshold=tfma.GenericValueThreshold(
+    #                             lower_bound={"value": 0.55}
+    #                         ),
+    #                         # Change threshold will be ignored if there is no
+    #                         # baseline model resolved from MLMD (first run).
+    #                         change_threshold=tfma.GenericChangeThreshold(
+    #                             direction=tfma.MetricDirection.HIGHER_IS_BETTER,
+    #                             absolute={"value": -1e-3},
+    #                         ),
+    #                     ),
+    #                 )
+    #             ]
+    #         )
+    #     ],
+    # )
 
-    evaluator = Evaluator(
-        examples=transform.outputs["transformed_examples"],
-        model=trainer.outputs["model"],
-        baseline_model=model_resolver.outputs["model"],
-        eval_config=eval_config,
-    )
-    components.append(evaluator)
+    # evaluator = Evaluator(
+    #     examples=transform.outputs["transformed_examples"],
+    #     model=trainer.outputs["model"],
+    #     baseline_model=model_resolver.outputs["model"],
+    #     eval_config=eval_config,
+    # )
+    # components.append(evaluator)
 
     pusher_args = {
         "model": trainer.outputs["model"],
-        "model_blessing": evaluator.outputs["blessing"],
+        # "model_blessing": evaluator.outputs["blessing"],
         "custom_config": ai_platform_serving_args,
     }
-    # pusher = VertexPusher(**pusher_args)  # pylint: disable=unused-variable
-    # components.append(pusher)
+    pusher = VertexPusher(**pusher_args)
+    components.append(pusher)
 
     # pusher_args["custom_config"] = gh_release_args
     # gh_pusher = GHPusher(**pusher_args).with_id("GHReleasePusher")
     # components.append(gh_pusher)
 
-    pusher_args["custom_config"] = hf_model_release_args
-    hf_model_pusher = HFModelPusher(**pusher_args).with_id("HFModelPusher")
-    components.append(hf_model_pusher)
+    # pusher_args["custom_config"] = hf_model_release_args
+    # hf_model_pusher = HFModelPusher(**pusher_args).with_id("HFModelPusher")
+    # components.append(hf_model_pusher)
 
-    space_pusher_args = {
-        "model": hf_model_pusher.outputs["pushed_model"],
-        "custom_config": hf_space_release_args,
-    }
-    hf_space_pusher = HFSpacePusher(**space_pusher_args).with_id("HFSpacePusher")
-    components.append(hf_space_pusher)
+    # space_pusher_args = {
+    #     "model": hf_model_pusher.outputs["pushed_model"],
+    #     "custom_config": hf_space_release_args,
+    # }
+    # hf_space_pusher = HFSpacePusher(**space_pusher_args).with_id("HFSpacePusher")
+    # components.append(hf_space_pusher)
 
     return pipeline.Pipeline(
         pipeline_name=pipeline_name,
