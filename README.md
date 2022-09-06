@@ -1,4 +1,12 @@
-[![Python 3.9](https://img.shields.io/badge/python-3.9-blue.svg)](https://www.python.org/downloads/release/python-390/) [![Lint](https://github.com/deep-diver/complete-mlops-system-workflow/actions/workflows/black.yml/badge.svg?branch=main)](https://github.com/deep-diver/complete-mlops-system-workflow/actions/workflows/black.yml) [![Validity Check for Training Pipeline](https://github.com/deep-diver/complete-mlops-system-workflow/actions/workflows/ci-training-pipeline.yml/badge.svg)](https://github.com/deep-diver/complete-mlops-system-workflow/actions/workflows/ci-training-pipeline.yml) [![CI - Semantic Seg - Training Pipeline](https://github.com/deep-diver/complete-mlops-system-workflow/actions/workflows/ci-seg-train.yml/badge.svg)](https://github.com/deep-diver/complete-mlops-system-workflow/actions/workflows/ci-seg-train.yml)
+[![Python 3.9](https://img.shields.io/badge/python-3.9-blue.svg)](https://www.python.org/downloads/release/python-390/) [![Lint](https://github.com/deep-diver/complete-mlops-system-workflow/actions/workflows/black.yml/badge.svg?branch=main)](https://github.com/deep-diver/complete-mlops-system-workflow/actions/workflows/black.yml) 
+
+## Status (Image Classification)
+
+[![Validity Check for Training Pipeline](https://github.com/deep-diver/complete-mlops-system-workflow/actions/workflows/ci-training-pipeline.yml/badge.svg)](https://github.com/deep-diver/complete-mlops-system-workflow/actions/workflows/ci-training-pipeline.yml) 
+
+## Status (Semantic Segmentation)
+
+[![CI - Semantic Seg - Training Pipeline](https://github.com/deep-diver/complete-mlops-system-workflow/actions/workflows/ci-seg-train.yml/badge.svg)](https://github.com/deep-diver/complete-mlops-system-workflow/actions/workflows/ci-seg-train.yml)
 
 # Complete MLOps System Workflow with GCP and TFX
 
