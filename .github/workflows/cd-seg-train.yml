@@ -60,7 +60,7 @@ jobs:
         gcloud --quiet auth configure-docker
 
     - name: 'Replace Access Token Placeholder'
-      working-directory: 'semantic_segmentation'
+      working-directory: 'semantic_segmentation/training_pipeline'
       env: 
         GH_ACCESS_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
         HF_ACCESS_TOKEN: ${{ secrets.HF_ACCESS_TOKEN }}
@@ -70,14 +70,14 @@ jobs:
         cat pipeline/configs.py
 
     - name: 'Compile TFX Training Pipeline'
-      working-directory: 'semantic_segmentation'
+      working-directory: 'semantic_segmentation/training_pipeline'
       run: |
         tfx pipeline compile \
           --pipeline-path kubeflow_runner.py \
           --engine vertex
           
     - name: 'Create TFX Training Pipeline'
-      working-directory: 'semantic_segmentation'
+      working-directory: 'semantic_segmentation/training_pipeline'
       run: |
         tfx pipeline create \
           --pipeline-path kubeflow_runner.py \
@@ -85,7 +85,7 @@ jobs:
           --build-image
           
     - name: 'Run TFX Training Pipeline'
-      working-directory: 'semantic_segmentation'
+      working-directory: 'semantic_segmentation/training_pipeline'
       run: |
           tfx run create \
             --engine vertex \
