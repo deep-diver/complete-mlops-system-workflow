@@ -4,9 +4,13 @@
 
 [![Validity Check for Training Pipeline](https://github.com/deep-diver/complete-mlops-system-workflow/actions/workflows/ci-training-pipeline.yml/badge.svg)](https://github.com/deep-diver/complete-mlops-system-workflow/actions/workflows/ci-training-pipeline.yml) 
 
+[![CD - Img Classification - Training Pipeline](https://github.com/deep-diver/complete-mlops-system-workflow/actions/workflows/cd-training-pipeline.yml/badge.svg)](https://github.com/deep-diver/complete-mlops-system-workflow/actions/workflows/cd-training-pipeline.yml)
+
 ## Status (Semantic Segmentation)
 
 [![CI - Semantic Seg - Training Pipeline](https://github.com/deep-diver/complete-mlops-system-workflow/actions/workflows/ci-seg-train.yml/badge.svg)](https://github.com/deep-diver/complete-mlops-system-workflow/actions/workflows/ci-seg-train.yml)
+
+[![CD - Semantic Seg - Training Pipeline](https://github.com/deep-diver/complete-mlops-system-workflow/actions/workflows/cd-seg-train.yml/badge.svg)](https://github.com/deep-diver/complete-mlops-system-workflow/actions/workflows/cd-seg-train.yml)
 
 # Complete MLOps System Workflow with GCP and TFX
 
