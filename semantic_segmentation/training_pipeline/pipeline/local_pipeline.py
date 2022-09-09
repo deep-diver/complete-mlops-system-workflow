@@ -109,7 +109,13 @@ def create_pipeline(
     # Uses TFMA to compute evaluation statistics over features of a model and
     # perform quality validation of a candidate model (compare to a baseline).
     eval_config = tfma.EvalConfig(
-        model_specs=[tfma.ModelSpec(label_key="label_xf", prediction_key="label_xf")],
+        model_specs=[
+            tfma.ModelSpec(
+                signature_name='serving_default',
+                label_key="label_xf", 
+                prediction_key="label_xf",
+                preprocessing_function_names=['transform_features']),
+        ],
         slicing_specs=[tfma.SlicingSpec()],
         metrics_specs=[
             tfma.MetricsSpec(

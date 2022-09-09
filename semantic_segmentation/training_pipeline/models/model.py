@@ -4,6 +4,7 @@ import keras_tuner
 import tensorflow as tf
 from tensorflow.keras.optimizers import Adam
 import tensorflow_transform as tft
+from tensorflow_transform.tf_metadata import schema_utils
 
 from tfx.v1.components import TunerFnResult
 from tfx.components.trainer.fn_args_utils import DataAccessor
@@ -30,7 +31,7 @@ def _transformed_name(key: str) -> str:
     return key + "_xf"
 
 
-def _get_signature(model):
+def _get_signature(model, schema, tf_transform_output):
     signatures = {
         "serving_default": _get_serve_image_fn(model).get_concrete_function(
             tf.TensorSpec(
@@ -38,7 +39,10 @@ def _get_signature(model):
                 dtype=tf.float32,
                 name=_transformed_name(_IMAGE_KEY),
             )
-        )
+        ),
+
+        "transform_features":
+            _get_transform_features_signature(model, schema, tf_transform_output),
     }
 
     return signatures
@@ -53,6 +57,39 @@ def _get_serve_image_fn(model):
 
     return serve_image_fn
 
+def _get_transform_features_signature(model, schema, tf_transform_output):
+  """Returns a serving signature that applies tf.Transform to features."""
+
+  if tf_transform_output is None:  # Transform component is not used.
+    @tf.function(input_signature=[
+        tf.TensorSpec(shape=[None], dtype=tf.string, name='examples')
+    ])
+    def transform_features_fn(serialized_tf_example):
+      """Returns the transformed_features to be fed as input to evaluator."""
+      raw_feature_spec = schema_utils.schema_as_feature_spec(
+          schema).feature_spec
+      raw_features = tf.io.parse_example(serialized_tf_example,
+                                         raw_feature_spec)
+      INFO(f'eval_features = {raw_features}')
+      return raw_features
+  else:  # Transform component exists.
+    # We need to track the layers in the model in order to save it.
+    # TODO(b/162357359): Revise once the bug is resolved.
+    model.tft_layer_eval = tf_transform_output.transform_features_layer()
+
+    @tf.function(input_signature=[
+        tf.TensorSpec(shape=[None], dtype=tf.string, name='examples')
+    ])
+    def transform_features_fn(serialized_tf_example):
+      """Returns the transformed_features to be fed as input to evaluator."""
+      raw_feature_spec = tf_transform_output.raw_feature_spec()
+      raw_features = tf.io.parse_example(serialized_tf_example,
+                                         raw_feature_spec)
+      transformed_features = model.tft_layer_eval(raw_features)
+      INFO(f'eval_transformed_features = {transformed_features}')
+      return transformed_features
+
+  return transform_features_fn
 
 # def _image_augmentation(image_features):
 #     batch_size = tf.shape(image_features)[0]
@@ -271,6 +308,7 @@ def tuner_fn(fn_args: FnArgs) -> TunerFnResult:
 
 def run_fn(fn_args: FnArgs):
     tf_transform_output = tft.TFTransformOutput(fn_args.transform_output)
+    schema = tf_transform_output.transformed_metadata.schema
 
     train_dataset = _input_fn(
         fn_args.train_files,
@@ -310,5 +348,5 @@ def run_fn(fn_args: FnArgs):
     )
 
     model.save(
-        fn_args.serving_model_dir, save_format="tf", signatures=_get_signature(model)
+        fn_args.serving_model_dir, save_format="tf", signatures=_get_signature(model, schema, tf_transform_output)
     )
